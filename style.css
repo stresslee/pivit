@@ -34,14 +34,14 @@
 
 /* ---------- Reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { overflow-x: clip; } /* scroll-behavior: smooth 은 ScrollTrigger pin 과 충돌하므로 쓰지 않음. 앵커 이동은 main.js 의 GSAP ScrollTo */
+html { overflow-x: clip; } /* 835px+ 에서는 900 고정 폭을 가로 스크롤로 볼 수 있게 아래 미디어에서 auto */ /* scroll-behavior: smooth 은 ScrollTrigger pin 과 충돌하므로 쓰지 않음. 앵커 이동은 main.js 의 GSAP ScrollTo */
 body {
   margin: 0;
   font-family: var(--font);
   color: var(--web-gray-900);
   background: var(--colors-base-white);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip; /* hidden 이면 body 가 스크롤 컨테이너가 되어 .fixed-layer 의 sticky 가 깨진다 */
   /* min-width 없음: 1440 이하에서는 --u 스케일로 계속 축소 (모바일 디자인 확정 전까지) */
 }
 h1, h2, h3, p, ul, ol, figure { margin: 0; }
@@ -52,11 +52,11 @@ details summary { list-style: none; }
 details summary::-webkit-details-marker { display: none; }
 
 /* ---------- Typography ---------- */
-.h0 { font-size: calc(62 * var(--u)); line-height: 1.33; font-weight: 700; }
-.h1 { font-size: calc(46 * var(--u)); line-height: 1.31; font-weight: 700; letter-spacing: -0.46px; color: var(--web-gray-900); }
-.h2 { font-size: calc(35 * var(--u)); line-height: 1.33; font-weight: 700; }
-.h3 { font-size: calc(26 * var(--u)); line-height: 1.41; font-weight: 700; color: var(--web-gray-900); }
-.s3__step-name { font-size: calc(24 * var(--u)); line-height: 1.41; } /* Figma Desktop/H4 — 섹션 3 스텝 타이틀 */
+.h0 { font-size: 62px; line-height: 1.33; font-weight: 700; } /* 테스트: 폭 축소 시 글자 고정 (원래 calc(62 * var(--u))) */
+.h1 { font-size: 46px; line-height: 1.31; font-weight: 700; letter-spacing: -0.46px; color: var(--web-gray-900); }
+.h2 { font-size: 35px; line-height: 1.33; font-weight: 700; }
+.h3 { font-size: 26px; line-height: 1.41; font-weight: 700; color: var(--web-gray-900); }
+.s3__step-name { font-size: 24px; line-height: 1.41; } /* Figma Desktop/H4 — 섹션 3 스텝 타이틀 */
 .headline { font-size: 21px; line-height: 1.63; font-weight: 600; letter-spacing: -0.21px; }
 .headline--bold { font-weight: 700; color: var(--web-gray-900); }
 .body { font-size: 16px; line-height: 1.63; font-weight: 500; letter-spacing: -0.48px; color: var(--web-gray-600); }
@@ -80,7 +80,8 @@ details summary::-webkit-details-marker { display: none; }
 }
 .cta:hover { transform: translateY(-2px); background: var(--colors-background-bgBrandSolidHover); }
 .cta--fixed {
-  position: fixed; top: 28px; right: 43px; z-index: 50;
+  /* 레이아웃(--vw = max(창폭, 900)) 오른쪽 끝 기준 43px. 창이 900 보다 좁으면 가로 스크롤(--sx)만큼 따라간다 */
+  position: fixed; top: 28px; right: calc(var(--cw, 100vw) - var(--vw, 100vw) + var(--sx, 0px) + 43px); z-index: 50;
   padding: 24px 40px;
   overflow: hidden;
   transition: opacity .35s var(--ease), transform .35s var(--ease), background-color .2s;
@@ -97,7 +98,8 @@ details summary::-webkit-details-marker { display: none; }
 
 /* ---------- GNB ---------- */
 .gnb {
-  position: fixed; top: 28px; left: 50%; translate: -50% 0; transform-origin: 50% 50%; z-index: 50;
+  /* position:fixed 유지 (sticky 래퍼 안에 넣으면 backdrop-filter 글래스 굴절이 사라짐). 레이아웃 중앙 = --vw/2 − 가로 스크롤 */
+  position: fixed; top: 28px; left: calc(var(--vw, 100vw) / 2 - var(--sx, 0px)); translate: -50% 0; transform-origin: 50% 50%; z-index: 50;
   display: flex; align-items: center; gap: 48px;
   padding: 24px 40px;
   border-radius: 9999px;
@@ -166,7 +168,7 @@ details summary::-webkit-details-marker { display: none; }
 }
 .hero__content { display: flex; flex-direction: column; align-items: center; gap: 32px; }
 .hero__eyebrow { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
-.hero__title { font-size: calc(62 * var(--u)); line-height: 1.33; font-weight: 700; }
+.hero__title { font-size: 62px; line-height: 1.33; font-weight: 700; }
 .hero__desc { width: calc(432 * var(--u)); display: flex; flex-direction: column; gap: 6px; }
 .hero__desc p { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
 .hero__desc .hero__note { font-size: 12px; font-weight: 400; letter-spacing: -0.36px; color: var(--componentColors-alpha-alphaWhite60); }
@@ -205,7 +207,7 @@ details summary::-webkit-details-marker { display: none; }
 .s1__lines { display: flex; flex-direction: column; gap: 8px; text-align: center; }
 .s1__line {
   --t: 0; /* 0 = 회색, 1 = 검정. 스크롤 진행에 따라 JS가 갱신 */
-  font-size: calc(26 * var(--u)); line-height: 1.41; font-weight: 700;
+  font-size: 26px; line-height: 1.41; font-weight: 700; /* 테스트: 창 폭에 따라 축소하지 않고 26px 고정 (이전 calc(26 * var(--u))) */
   color: color-mix(in srgb, var(--web-gray-900) calc(var(--t) * 100%), var(--colors-text-textQuaternary)); /* Figma 5:1265: 비활성 줄 = text-quaternary */
 }
 
@@ -289,26 +291,26 @@ details summary::-webkit-details-marker { display: none; }
   transform: translateY(calc(var(--hy, 374) * var(--u))); /* --hy 는 단위 없는 1440 기준 px, JS 가 보간 */
 }
 /* --m 1 = 큰 문장(35, 비율 축소), 0 = 본문 크기(16px 고정). JS 가 1→0 으로 보간 */
-.s4__eyebrow { --m: 1; font-size: calc(35 * var(--u) * var(--m) + 16px * (1 - var(--m))); font-weight: 700; line-height: 1.33; letter-spacing: 0; }
+.s4__eyebrow { --m: 1; font-size: calc(35px * var(--m) + 16px * (1 - var(--m))); font-weight: 700; line-height: 1.33; letter-spacing: 0; }
 .s4__title { color: var(--colors-text-textPrimaryOnBrand); margin-top: 19px; opacity: 0; }
 .s4__caption {
-  position: absolute; left: 0; right: 0; top: calc(191 * var(--u)); text-align: center; /* head(37) 기준 228−37 */
+  margin-top: 26px; text-align: center; /* 흐름 배치: 타이틀 하단 +26 → Figma 기준 head 상단에서 191 (글자 고정 후에도 겹치지 않도록 absolute → 흐름) */
   font-size: 12px; font-weight: 500; line-height: 1.63; letter-spacing: -0.36px;
   color: var(--colors-text-textPrimaryOnBrand); opacity: 0;
 }
 .s4__more {
-  position: absolute; left: 50%; top: calc(197 * var(--u)); transform: translateX(-50%); /* head 기준 234−37 */
+  display: inline-block; margin-top: 32px; /* 흐름 배치: 타이틀 하단 +32 → head 기준 197 (Figma 234−37). text-align:center 로 중앙 */
   padding: 6px 12px; border-radius: 9999px; cursor: pointer;
   border: 1px solid var(--componentColors-alpha-alphaWhite60); background: transparent;
   color: var(--colors-text-textPrimaryOnBrand); font: inherit; font-size: 12px; font-weight: 500; line-height: 1.63; letter-spacing: -0.36px;
   opacity: 0; transition: background-color .2s;
 }
 .s4__more:hover { background: var(--componentColors-alpha-alphaWhite20); }
-.s4__more--low { top: calc(239 * var(--u)); }
+.s4__caption + .s4__more, .s4__more--low { margin-top: 28px; } /* 캡션 뒤 버튼: head 기준 239 */
 /* GSAP 이 transform(y) 을 덮어쓰므로 translateX(-50%) 대신 left 로 중앙 정렬 (리사이즈 시에도 정확) */
-.s4__mock { position: absolute; left: calc(50% - 523.5 * var(--u)); top: calc(293 * var(--u)); width: calc(1047 * var(--u)); height: auto; opacity: 0; }
-.s4__mock--2 { left: calc(50% - 629 * var(--u)); width: calc(1258 * var(--u)); top: calc(361 * var(--u)); }
-.s4__mock--3 { top: calc(361 * var(--u)); }
+.s4__mock { --mock-top: calc(293 * var(--u)); position: absolute; left: calc(50% - 523.5 * var(--u)); top: max(var(--mock-top), calc(37 * var(--u) + var(--s4-head-h, 0px) + 24px)); width: calc(1047 * var(--u)); height: auto; opacity: 0; } /* --s4-head-h 는 main.js 가 헤드 높이로 갱신 */
+.s4__mock--2 { left: calc(50% - 629 * var(--u)); width: calc(1258 * var(--u)); --mock-top: calc(361 * var(--u)); }
+.s4__mock--3 { --mock-top: calc(361 * var(--u)); }
 
 /* 상세 모달 (Figma 15:8727) — 뷰포트 고정, 높이는 vh 기준, 내용이 길면 내부 스크롤. GNB/고정 버튼보다 위 */
 .s4__modal {
@@ -474,7 +476,7 @@ html.is-locked { overflow: hidden; }
 /* 푸터 내부: 아래부터 쌓는다 — 로고(바닥 98*u) ↑ 96px 고정 ↑ 법적 고지 ↑ 296px 고정 ↑ 메시지/버튼 그룹.
    본문 글자 크기는 고정이라 폭이 줄면 텍스트 줄 수가 늘어나는데, 간격을 고정하고 위로 밀어 올려 겹치지 않게 한다 (1440 기준 Figma 위치와 동일) */
 .footer__inner { position: relative; z-index: 1; min-height: calc(1931 * var(--u)); display: flex; flex-direction: column; justify-content: flex-end; padding-top: calc(300 * var(--u)); /* FAQ 와 겹치는 상단(182*u) + 여유 */ padding-bottom: calc(98 * var(--u)); }
-.footer__msg { width: calc(379 * var(--u)); display: flex; flex-direction: column; gap: 31px; }
+.footer__msg { width: max(calc(379 * var(--u)), 379px); display: flex; flex-direction: column; gap: 31px; }
 .footer__msg .body { color: var(--colors-text-textPrimaryOnBrand); }
 .footer__msg .h3 { color: var(--colors-text-textPrimaryOnBrand); }
 .footer__msg-text { display: flex; flex-direction: column; gap: 21px; }
@@ -486,7 +488,7 @@ html.is-locked { overflow: hidden; }
 .footer__logo { margin-top: 96px; width: 100%; height: calc(446 * var(--u)); }
 .footer__logo img { width: 100%; height: 100%; }
 
-/* 모바일 전용 요소 (≤600px 에서만 표시) */
+/* 모바일 전용 요소 (≤834px 에서만 표시) */
 .s3__tabs, .s3__current, .s4__mock-m, .s6__navigator-m, .s7__screen-m, .s9__modal-m, .feat__visual-m, .s10__badge-m, .faq__title-m, .br-m { display: none; }
 
 /* ---------- Scroll reveal (generic) ---------- */
@@ -512,10 +514,13 @@ html.is-locked { overflow: hidden; }
 
 
 /* ==========================================================================
-   Mobile (≤600px) — Figma 30:1048 (393px 기준, 가로 100% 유동)
+   Mobile (≤834px) — Figma 30:1048 (393px 기준, 가로 100% 유동)
    --mu = 393 디자인의 1px. 절대 좌표가 필요한 곳(섹션 4·5·10, 푸터 배경)만 --mu 로 비례.
    ========================================================================== */
-@media (max-width: 600px) {
+/* 데스크톱 최소 폭 900: 그 아래로는 레이아웃을 900 기준으로 고정하고 가로 스크롤 */
+@media (min-width: 835px) { html { overflow-x: auto; } body { min-width: 900px; } :root { --vw: max(100vw, 900px); } }
+
+@media (max-width: 834px) {
   :root { --u: 1px; --mu: calc(100vw / 393); --container: 100%; }
   .wrap { width: 100%; padding-left: 24px; padding-right: 24px; }
 
@@ -594,6 +599,7 @@ html.is-locked { overflow: hidden; }
   .s4__eyebrow { font-size: calc(14 * var(--cu)); font-weight: 500; line-height: 1.63; letter-spacing: -0.03em; }
   .s4__title { margin: 0; opacity: 1; font-size: calc(27 * var(--cu)); line-height: 1.31; letter-spacing: -0.01em; }
   .s4__caption, .s4__more { position: static; transform: none; opacity: 1; }
+  .s4__more, .s4__caption + .s4__more { margin-top: 0; }
   .s4__caption { margin-top: calc(-12 * var(--cu)); font-size: calc(12 * var(--cu)); letter-spacing: -0.03em; }
   .s4__more { font-size: calc(12 * var(--cu)); letter-spacing: -0.03em; padding: calc(6 * var(--cu)) calc(12 * var(--cu)); }
   .s4__mock { display: none; }

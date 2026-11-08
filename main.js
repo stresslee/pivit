@@ -5,7 +5,7 @@
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const review = location.search.includes('review');
   if (review) document.documentElement.classList.add('review');
-  const MOBILE = window.matchMedia('(max-width: 600px)').matches;   // 모바일 분기 (CSS 브레이크포인트 600 과 동일)
+  const MOBILE = window.matchMedia('(max-width: 834px)').matches;   // 모바일 분기 (CSS 브레이크포인트 834 와 동일)
   const shift = new URLSearchParams(location.search).get('shift');
   if (shift) document.body.style.marginTop = (-parseInt(shift, 10)) + 'px';
   if (location.search.includes('gnbdark')) document.getElementById('gnb').classList.add('is-dark');
@@ -53,7 +53,7 @@
   const faq = document.querySelector('.faq');
   const fitFaq = () => {
     if (!faq || !faqItems.length) return;
-    if (window.matchMedia('(max-width: 600px)').matches) { faq.style.height = ''; return; }
+    if (window.matchMedia('(max-width: 834px)').matches) { faq.style.height = ''; return; }
     faq.style.height = '';
     const base = faq.getBoundingClientRect().height;             // CSS 고정 높이(745*u)
     const clone = faq.cloneNode(true);
@@ -94,9 +94,13 @@
   }
 
   /* ---------- 반응형 스케일: --vw 를 스크롤바를 뺀 실제 폭으로 (CSS 기본값 100vw 는 스크롤바 포함) ---------- */
-  const setVW = () => document.documentElement.style.setProperty('--vw', document.documentElement.clientWidth + 'px');
+  // 데스크톱 레이아웃(835px+)은 900px 아래로 줄어들지 않는다: 900 기준으로 고정하고 가로 스크롤 (모바일 600 이하는 100% 유동)
+  const DESKTOP_MIN = 900;
+  // --vw: 레이아웃 폭(데스크톱은 최소 900), --cw: 실제 창 폭, --sx: 가로 스크롤 — GNB·고정 CTA 가 900 고정 레이아웃을 따라가도록 CSS 에서 사용
+  const setVW = () => { const w = document.documentElement.clientWidth; const root = document.documentElement.style; root.setProperty('--vw', (w > 834 ? Math.max(w, DESKTOP_MIN) : w) + 'px'); root.setProperty('--cw', w + 'px'); root.setProperty('--sx', Math.round(window.scrollX) + 'px'); };
   setVW();
   window.addEventListener('resize', setVW);
+  let lastSX = 0; window.addEventListener('scroll', () => { if (window.scrollX !== lastSX) { lastSX = window.scrollX; document.documentElement.style.setProperty('--sx', Math.round(lastSX) + 'px'); } }, { passive: true });
   if (window.ResizeObserver) new ResizeObserver(setVW).observe(document.documentElement);
 
   /* ---------- Section 3 : 좌측 메뉴 탭 → 우측 화면 전환 (스크롤 비연동) ---------- */
@@ -231,9 +235,9 @@
   const s4 = document.querySelector('.s4');
   const s4Slides = gsap.utils.toArray('.s4__slide');
   if (s4 && s4Slides.length) {
-    // 데스크톱(601px+)에서만 스크롤 스토리. 창 크기가 모바일 폭으로 바뀌면 GSAP 이 핀/인라인 스타일을 되돌려 CSS 정적 레이아웃(카드 3장 전부 표시)만 남는다
+    // 데스크톱(835px+)에서만 스크롤 스토리. 창 크기가 모바일 폭으로 바뀌면 GSAP 이 핀/인라인 스타일을 되돌려 CSS 정적 레이아웃(카드 3장 전부 표시)만 남는다
     const s4mm = gsap.matchMedia();
-    s4mm.add('(min-width: 601px)', () => {
+    s4mm.add('(min-width: 835px)', () => {
     const SLIDE_SCROLL = 2000;                                 // 슬라이드당 스크롤 길이 (멈춤 구간 포함)
     const tl = gsap.timeline({
       scrollTrigger: { trigger: s4, pin: '.s4__sticky', start: 'top top', end: '+=' + (SLIDE_SCROLL * s4Slides.length), scrub: 0.4, invalidateOnRefresh: true } // anticipatePin 제거: 섹션1 과 같은 조기 스냅 방지
@@ -246,6 +250,11 @@
        0.60~0.72  헤드 상단으로
        0.68~0.88  목업 상승, 캡션/자세히 등장
        0.88~1.00  ■ 콘텐츠 읽는 멈춤 (약 240px) 후 다음 슬라이드 */
+    // 글자 크기를 고정하면서 좁은 폭에서는 헤드가 길어진다 → 헤드 높이를 --s4-head-h 로 넘겨 CSS 가 목업을 아래로 밀 수 있게 한다
+    if (window.ResizeObserver) {
+      const headRO = new ResizeObserver((entries) => { entries.forEach((e) => e.target.closest('.s4__slide').style.setProperty('--s4-head-h', Math.ceil(e.contentRect.height) + 'px')); });
+      s4Slides.forEach((slide) => headRO.observe(slide.querySelector('.s4__head')));
+    }
     s4Slides.forEach((slide, i) => {
       const t0 = i;
       const head = slide.querySelector('.s4__head');
@@ -275,7 +284,7 @@
       const idx = Math.min(s4Slides.length - 1, Math.floor(tl.progress() * s4Slides.length));
       s4Slides.forEach((s, k) => s.classList.toggle('is-active', k === idx));
     });
-    // 데스크톱→모바일(600 이하)로 창이 줄면 GSAP 이 컨텍스트를 되돌리는데, .to() 트윈은 시작값(데스크톱 CSS opacity 0)을 인라인으로 남긴다
+    // 데스크톱→모바일(834 이하)로 창이 줄면 GSAP 이 컨텍스트를 되돌리는데, .to() 트윈은 시작값(데스크톱 CSS opacity 0)을 인라인으로 남긴다
     // → 캡션/자세히 버튼이 모바일에서 안 보임. 되돌릴 때 인라인 스타일을 지워 CSS 정적 레이아웃만 남긴다 (슬라이드의 --bg 인라인은 유지)
     return () => {
       gsap.set(s4Slides, { clearProps: 'opacity' });
