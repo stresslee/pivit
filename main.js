@@ -166,6 +166,12 @@
   /* ---------- GNB 글래스 렌즈 (glisse) : spread 필드 · Bend 1.0 · Dispersion 1.05 · Rim 0.61 ---------- */
   const glass = window.PivitGlass ? PivitGlass.mountField(gnb, { bend: 1.0, dispersion: 1.05, rim: 0.61, blur: 0.6 }) : null;
   window.addEventListener('load', () => glass && glass.refit());
+  /* ?mirror 프로토타입 : backdrop-filter 굴절이 없는 WebKit(iOS) 용 — 페이지 복제본을 GNB 안에 잘라 넣고 렌즈 필터 (glass.js mountMirror) */
+  let mirror = null;
+  if (location.search.includes('mirror') && window.PivitGlass) {
+    const mountMirror = () => { mirror = PivitGlass.mountMirror(gnb, { sources: [document.querySelector('main'), document.querySelector('.footer')], exclude: ['.s4__modal'], bend: 1.0, dispersion: 1.05, blur: 0.6 }); };
+    if (document.readyState === 'complete') setTimeout(mountMirror, 0); else window.addEventListener('load', () => setTimeout(mountMirror, 0));
+  }
 
   /* ---------- GNB 꿀렁임 : 스크롤 속도에 따라 눌렸다가 탄성으로 복귀, 렌즈 굴절도 같이 출렁 ---------- */
   const wobble = { amount: 1 };
@@ -181,9 +187,9 @@
         .to(gnb, { scaleX: 1 + 0.045 * k, scaleY: 1 - 0.11 * k, duration: 0.12, ease: 'power2.out' }, 0)
         .to(gnb, { scaleX: 1, scaleY: 1, duration: 1.1, ease: 'elastic.out(1.1, 0.32)' }, 0.12)
         .to(wobble, { amount: 1 - 0.5 * k, duration: 0.12, ease: 'power2.out',
-          onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0)
+          onUpdate: () => { glass && glass.setAmount(wobble.amount); mirror && mirror.setAmount(wobble.amount); } }, 0)
         .to(wobble, { amount: 1, duration: 1.1, ease: 'elastic.out(1.1, 0.32)',
-          onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0.12);
+          onUpdate: () => { glass && glass.setAmount(wobble.amount); mirror && mirror.setAmount(wobble.amount); } }, 0.12);
     }
   });
 

@@ -136,6 +136,12 @@ details summary::-webkit-details-marker { display: none; }
   /* 림 box-shadow 는 두지 않는다: 존재하지 않는 alphaBlack20 토큰을 참조해 원래 적용되지 않던 규칙이었고, 실제 색으로 바꾸면 검은 테두리로 보인다 */
 }
 .gnb.is-dark::after { opacity: 0; }
+/* ?mirror 프로토타입 (glass.js mountMirror): GNB 뒤 페이지 복제본을 GNB 모양으로 잘라 렌즈 필터를 건다 — WebKit 에서도 굴절. 틴트(::before, z -1) 아래, 다크 구간에서만 표시 */
+.gnb__mirror { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -2; pointer-events: none; contain: strict; }
+.gnb:not(.is-dark) .gnb__mirror { display: none; }
+.gnb__mirror-lens { position: absolute; inset: calc(-1 * var(--mirror-pad, 0px)); filter: blur(1.5px) var(--lg-mirror-filter, none); }
+.gnb__mirror-inner { position: absolute; left: 0; top: 0; }
+.gnb.has-mirror.is-dark { backdrop-filter: none; -webkit-backdrop-filter: none; }
 
 .gnb__logo { position: relative; width: 85px; height: 30px; display: block; }
 .gnb__symbol { position: absolute; left: 0; top: 0; height: 100%; width: 32.49%; }
@@ -397,8 +403,8 @@ html.is-locked { overflow: hidden; }
 /* ---------- Feature sections (6~10) ---------- */
 .feat { margin-top: calc(277 * var(--u)); display: flex; flex-direction: column; gap: 64px; }
 .feat--s9 { margin-top: calc(389 * var(--u)); }
-#s10 { margin-top: calc(277 * var(--u)); } /* 섹션 9 컬럼이 사라져 다른 기능 섹션과 같은 277 간격 */
-#features { margin-top: 0; }
+.feat--s10 { margin-top: calc(277 * var(--u)); } /* 섹션 9 컬럼이 사라져 다른 기능 섹션과 같은 277 간격 */
+.feat--s6 { margin-top: 0; } /* 섹션 간격은 id 가 아니라 class 로 (GNB 미러 복제본은 id 를 지움) */
 .feat__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
 .feat__head--s7 .h1 { flex: 1; }
 .feat__sub { padding-bottom: 8px; white-space: nowrap; flex: none; }
@@ -545,13 +551,13 @@ html.is-locked { overflow: hidden; }
   .cta--fixed { display: none; }
 
   /* Hero (393×852 → 화면 높이) */
-  .hero { height: auto; min-height: 100svh; padding: 25px 32px 137px; justify-content: center; background-position: center; }
+  .hero { height: auto; min-height: 100svh; padding: 66px 32px 137px; justify-content: center; background-position: center; } /* Figma 30:1060: 패딩 66/137 → 콘텐츠 218~563 */
   .hero__content { gap: 32px; width: 100%; }
-  .hero__eyebrow { font-size: 16px; }
+  .hero__eyebrow { font-size: 16px; margin-bottom: -22px; } /* Figma: 아이브로 → 타이틀 10 (콘텐츠 gap 32 − 22) */
   .hero__desc { width: 100%; }
   .hero__desc p { font-size: 16px; letter-spacing: -0.48px; }
   .hero__desc .hero__note { font-size: 12px; letter-spacing: -0.36px; }
-  .hero .cta { padding: 16px 32px; font-size: 14px; letter-spacing: -0.42px; margin-top: 16px; } /* Figma: 보조 문구 → 버튼 48 (콘텐츠 gap 32 + 16) */
+  .hero .cta { padding: 16px 32px; font-size: 14px; letter-spacing: -0.42px; margin-top: 0; } /* Figma: 보조 문구 → 버튼 32 */
   .hero__scroll img { width: 76px; height: 43px; }
 
   /* Video : 배경 2008×760 을 히어로와 같은 배율로 이어 붙임, 16:9 프레임 */
@@ -562,18 +568,18 @@ html.is-locked { overflow: hidden; }
 
   /* Section 1 */
   .s1 { margin-top: 0; height: 100svh; min-height: 560px; }
-  .s1__lines { padding: 0 32px; }
-  .s1__line { font-size: 20px; }
+  .s1__lines { padding: 0 31px; } /* Figma 프레임은 394 폭(콘텐츠 330) — 첫 줄이 한 줄에 들어가도록 1px 여유 */
+  .s1__line { font-size: min(20px, calc(100vw * 20 / 393)); }
 
   /* Section 2 : 카드 세로 나열 */
   .s2 { margin-top: 36px; padding: 0 32px; gap: 48px; }
   .s2__grid { display: flex; flex-direction: column; gap: 24px; }
-  .s2__card { gap: 12px; }
-  .s2__text { gap: 24px; padding: 0 0 20px; }
+  .s2__card { gap: 16px; } /* Figma 30:1095: 이미지 → 텍스트 16 */
+  .s2__text { gap: 6px; padding: 0 0 20px; } /* Figma 30:1100: 제목 → 본문 6 */
   .s2__target { width: 42.5%; height: auto; }
 
   /* Logos */
-  .logos { margin-top: 45px; height: 112px; } /* Figma: 섹션 2 끝 3490 → 로고 3534 */
+  .logos { margin-top: 87px; height: 112px; } /* Figma: 섹션 2 끝 3448.1 → 로고 3534 (섹션 2 가 1px 짧아 보정) */
   .logos__track img { width: 1811px; height: 112px; }
 
   /* Section 3 : 탭 + 스테이지 + 현재 스텝 설명 */
@@ -582,7 +588,7 @@ html.is-locked { overflow: hidden; }
   .s3__tabs { display: flex; gap: 4px; width: 100%; }
   .s3__tab { flex: 1 0 0; min-width: 0; padding: 8px 16px; border: 0; border-radius: 9999px; background: transparent; font: inherit; font-size: 19px; font-weight: 700; line-height: 1.41; color: var(--web-gray-600); cursor: pointer; }
   .s3__tab.is-active { background: var(--colors-background-bgPrimarySolid); color: var(--colors-text-textPrimaryOnBrand); }
-  .s3__body { flex-direction: column; gap: 12px; position: relative; }
+  .s3__body { flex-direction: column; gap: 12px; position: relative; margin-top: -28px; } /* Figma 30:1891→30:1146: 탭 → 패널 20 (sticky gap 48 − 28) */
   .s3 .h1 br { display: none; }                                       /* 모바일은 자연 줄바꿈 (Figma 2줄) */
   .br-m { display: inline; }                                          /* 모바일 전용 줄바꿈 (히어로 3줄) */
   .s3__steps { display: none; }
@@ -594,7 +600,7 @@ html.is-locked { overflow: hidden; }
   .s3__current p { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; color: var(--web-gray-600); }
 
   /* Section 4 : 스크롤 스토리 없이 카드 3장 세로 나열 (Figma 30:1899 / 2076 / 2346, 343×527) */
-  .s4 { margin-top: 101px; }
+  .s4 { margin-top: 129px; } /* Figma: 섹션 3 끝 4265 → 섹션 4 4394 */
   .s4__sticky { display: block; min-height: 0; padding: 0 25px; }
   .s4__stage { width: 100%; height: auto; }
   .s4__card { height: auto; border: 0; border-radius: 0; background: none; overflow: visible; display: flex; flex-direction: column; gap: 25px; }
@@ -637,11 +643,11 @@ html.is-locked { overflow: hidden; }
   /* 기능 섹션 6~10 : 비주얼 342×643, 컬럼 세로 나열 */
   .feat { gap: 40px; }
   /* 섹션 간격: Figma 30:1048 프레임 시작 y (7016 / 8751 / 10565 / 12211 / 13351) 기준 */
-  #features { margin-top: 25px; }
-  #s7 { margin-top: 78px; }
-  #s8 { margin-top: 156px; }
+  .feat--s6 { margin-top: 25px; }
+  .feat--s7 { margin-top: 163px; } /* Figma 2026-11-08: 섹션 6 끝 → 섹션 7 8836 (우리 섹션 6 은 8673 에서 끝남) */
+  .feat--s8 { margin-top: 156px; }
   .feat--s9 { margin-top: 135px; }
-  #s10 { margin-top: 171px; }
+  .feat--s10 { margin-top: 171px; }
   .feat__head { flex-direction: column; align-items: flex-start; gap: 20px; }
   .feat__head--s7 .h1 { flex: none; }
   .feat__sub { white-space: normal; padding-bottom: 8px; }
