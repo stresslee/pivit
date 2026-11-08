@@ -136,12 +136,6 @@ details summary::-webkit-details-marker { display: none; }
   /* 림 box-shadow 는 두지 않는다: 존재하지 않는 alphaBlack20 토큰을 참조해 원래 적용되지 않던 규칙이었고, 실제 색으로 바꾸면 검은 테두리로 보인다 */
 }
 .gnb.is-dark::after { opacity: 0; }
-/* ?mirror 프로토타입 (glass.js mountMirror): GNB 뒤 페이지 복제본을 GNB 모양으로 잘라 렌즈 필터를 건다 — WebKit 에서도 굴절. 틴트(::before, z -1) 아래, 다크 구간에서만 표시 */
-.gnb__mirror { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -2; pointer-events: none; contain: strict; }
-.gnb:not(.is-dark) .gnb__mirror { display: none; }
-.gnb__mirror-lens { position: absolute; inset: calc(-1 * var(--mirror-pad, 0px)); filter: blur(1.5px) var(--lg-mirror-filter, none); }
-.gnb__mirror-inner { position: absolute; left: 0; top: 0; }
-.gnb.has-mirror.is-dark { backdrop-filter: none; -webkit-backdrop-filter: none; }
 
 .gnb__logo { position: relative; width: 85px; height: 30px; display: block; }
 .gnb__symbol { position: absolute; left: 0; top: 0; height: 100%; width: 32.49%; }
@@ -404,7 +398,7 @@ html.is-locked { overflow: hidden; }
 .feat { margin-top: calc(277 * var(--u)); display: flex; flex-direction: column; gap: 64px; }
 .feat--s9 { margin-top: calc(389 * var(--u)); }
 .feat--s10 { margin-top: calc(277 * var(--u)); } /* 섹션 9 컬럼이 사라져 다른 기능 섹션과 같은 277 간격 */
-.feat--s6 { margin-top: 0; } /* 섹션 간격은 id 가 아니라 class 로 (GNB 미러 복제본은 id 를 지움) */
+.feat--s6 { margin-top: 0; }
 .feat__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
 .feat__head--s7 .h1 { flex: 1; }
 .feat__sub { padding-bottom: 8px; white-space: nowrap; flex: none; }
