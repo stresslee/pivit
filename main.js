@@ -5,6 +5,14 @@
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const review = location.search.includes('review');
   if (review) document.documentElement.classList.add('review');
+  /* 지연 배경: .bg-defer 요소가 뷰포트 1.5화면 안으로 들어오면 .is-near → CSS 배경 로드 (review 모드·IO 미지원이면 즉시) */
+  const deferred = Array.from(document.querySelectorAll('.bg-defer'));
+  if (!('IntersectionObserver' in window) || review) deferred.forEach((el) => el.classList.add('is-near'));
+  else {
+    // 가까워지면 배경을 켜고, 안의 lazy 이미지(숨겨진 섹션 3 패널 등)도 미리 받아 둔다 → 탭 전환 시 빈 화면 없음
+    const bgIO = new IntersectionObserver((entries) => { entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('is-near'); en.target.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager'; }); bgIO.unobserve(en.target); } }); }, { rootMargin: '150% 0px' });
+    deferred.forEach((el) => bgIO.observe(el));
+  }
   const MOBILE = window.matchMedia('(max-width: 834px)').matches;   // 모바일 분기 (CSS 브레이크포인트 834 와 동일)
   const shift = new URLSearchParams(location.search).get('shift');
   if (shift) document.body.style.marginTop = (-parseInt(shift, 10)) + 'px';

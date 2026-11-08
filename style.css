@@ -211,6 +211,9 @@ details summary::-webkit-details-marker { display: none; }
   color: color-mix(in srgb, var(--web-gray-900) calc(var(--t) * 100%), var(--colors-text-textQuaternary)); /* Figma 5:1265: 비활성 줄 = text-quaternary */
 }
 
+/* 첫 화면 밖 CSS 배경 이미지는 섹션이 가까워질 때(main.js IntersectionObserver → .is-near) 로드. JS 없으면(no-js) 바로 로드 */
+html:not(.no-js) .bg-defer:not(.is-near) { background-image: none !important; }
+
 /* ---------- Section 2 ---------- */
 .s2 { margin-top: calc(50 * var(--u)); display: flex; flex-direction: column; gap: 64px; }
 .s2__grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 16px; }
@@ -308,8 +311,8 @@ details summary::-webkit-details-marker { display: none; }
 .s4__more:hover { background: var(--componentColors-alpha-alphaWhite20); }
 .s4__caption + .s4__more, .s4__more--low { margin-top: 28px; } /* 캡션 뒤 버튼: head 기준 239 */
 /* GSAP 이 transform(y) 을 덮어쓰므로 translateX(-50%) 대신 left 로 중앙 정렬 (리사이즈 시에도 정확) */
-.s4__mock { --mock-top: calc(293 * var(--u)); position: absolute; left: calc(50% - 523.5 * var(--u)); top: max(var(--mock-top), calc(37 * var(--u) + var(--s4-head-h, 0px) + 24px)); width: calc(1047 * var(--u)); height: auto; opacity: 0; } /* --s4-head-h 는 main.js 가 헤드 높이로 갱신 */
-.s4__mock--2 { left: calc(50% - 629 * var(--u)); width: calc(1258 * var(--u)); --mock-top: calc(361 * var(--u)); }
+.s4__mock { --mock-top: calc(293 * var(--u)); position: absolute; left: calc(50% - 523.5 * var(--u)); top: max(var(--mock-top), calc(37 * var(--u) + var(--s4-head-h, 0px) + 24px - var(--mock-pad, 0px))); width: calc(1047 * var(--u)); height: auto; opacity: 0; } /* --s4-head-h 는 main.js 가 헤드 높이로 갱신 */
+.s4__mock--2 { left: calc(50% - 629 * var(--u)); width: calc(1258 * var(--u)); --mock-top: calc(277 * var(--u)); --mock-pad: calc(85 * var(--u)); } /* Figma 16:9035 content_modal 렌더 바운드(그림자 포함) y 277, 1258×515 (카드 하단에 클립). 모달 본체는 그 85 아래(362)라 헤드 겹침 판정에서 85 를 뺀다 */
 .s4__mock--3 { --mock-top: calc(361 * var(--u)); }
 
 /* 상세 모달 (Figma 15:8727) — 뷰포트 고정, 높이는 vh 기준, 내용이 길면 내부 스크롤. GNB/고정 버튼보다 위 */
@@ -443,7 +446,7 @@ html.is-locked { overflow: hidden; }
   background: url("assets/pill-bg-1.webp") center / cover no-repeat, var(--colors-brand-200);
 }
 .s10__item { width: 54px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
-.s10__item--user { padding-top: 9px; }
+.s10__item img { width: 50px; height: 50px; } /* Figma 28:16042: 아이콘 3개 모두 50 (Frame 826~828) */
 .s10__item .headline { color: var(--colors-text-textWhite); white-space: nowrap; }
 /* 곧 출시 배지: Figma image 80 (30:7933) 2x export */
 .s10__badge { position: absolute; left: 50%; top: calc(153 * var(--u)); transform: translateX(-50%); width: calc(112 * var(--u)); height: auto; }
@@ -658,10 +661,8 @@ html.is-locked { overflow: hidden; }
   .s8__flow { left: 18.1%; top: 38.4%; width: 64%; }
   /* Figma 30:4937 (342×643): 알약 top 159, padding 47.3/50, gap 34 — 라벨만(보조 문구 없음); 배지는 image 83 (83×37, top 140) */
   .s10__pill { flex-direction: column; align-items: center; top: 24.7%; gap: calc(34 * var(--mu)); padding: calc(47.3 * var(--mu)) calc(50 * var(--mu)); }
-  .s10__item { width: auto; gap: 3.6px; }
-  .s10__item--user { padding-top: 5.5px; }
-  .s10__item img { width: 30px; height: 30px; }
-  .s10__item--user img { width: 24px; height: 24px; }
+  .s10__item { width: calc(32.7 * var(--mu)); gap: 3.64px; } /* Figma 30:5035: 아이템 32.7 (라벨은 넘쳐서 중앙 정렬) */
+  .s10__item img { width: 30.3px; height: 30.3px; } /* Figma 30:5035: 아이콘 3개 모두 30.3 */
   .s10__item .headline { font-size: 12.7px; font-weight: 600; line-height: 1.63; letter-spacing: -0.13px; }
   .s10__badge { display: none; }
   .s10__badge-m { display: block; position: absolute; left: 50%; top: 21.8%; transform: translateX(-50%); width: calc(83 * var(--mu)); height: auto; }
