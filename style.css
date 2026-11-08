@@ -141,13 +141,6 @@ details summary::-webkit-details-marker { display: none; }
   /* 림 box-shadow 는 두지 않는다: 존재하지 않는 alphaBlack20 토큰을 참조해 원래 적용되지 않던 규칙이었고, 실제 색으로 바꾸면 검은 테두리로 보인다 */
 }
 .gnb.is-dark::after { opacity: 0; }
-/* WebKit 굴절 근사 (glass.js mountMirror): GNB 뒤 페이지 복제본을 GNB 모양으로 잘라 두 겹 — rim(축소본)이 가장자리 띠에, base(1:1)가 bevel 안쪽 알약에. 틴트(::before, z -1) 아래, 다크 구간에서만 */
-.gnb__mirror { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -2; pointer-events: none; contain: strict; filter: blur(1.5px); }
-.gnb:not(.is-dark) .gnb__mirror { display: none; }
-.gnb__mirror-rim { position: absolute; inset: 0; }
-.gnb__mirror-base { position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; } /* mask-image 는 glass.js 가 크기에 맞춰 생성 */
-.gnb__mirror-inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.gnb.has-mirror.is-dark { backdrop-filter: none; -webkit-backdrop-filter: none; }
 
 .gnb__logo { position: relative; width: 85px; height: 30px; display: block; }
 .gnb__symbol { position: absolute; left: 0; top: 0; height: 100%; width: 32.49%; }
