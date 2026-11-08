@@ -26,9 +26,9 @@
   <meta name="twitter:image" content="https://stresslee.github.io/pivit/assets/og.png" />
   <link rel="icon" href="assets/logo-symbol.svg" type="image/svg+xml" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="tokens.css?v=20261110m" />
-  <link rel="stylesheet" href="tokens-dark.css?v=20261110m" />
-  <link rel="stylesheet" href="style.css?v=20261110m" />
+  <link rel="stylesheet" href="tokens.css?v=20261110z" />
+  <link rel="stylesheet" href="tokens-dark.css?v=20261110z" />
+  <link rel="stylesheet" href="style.css?v=20261110z" />
 </head>
 <body>
 
@@ -54,7 +54,7 @@
 <section class="hero">
   <div class="hero__content">
     <p class="hero__eyebrow">대표를 위한 조직 운영 체제</p>
-    <h1 class="hero__title">우리 회사 시간이<br class="br-m" /> 어디로 가는지,<br />한눈에 보여요</h1>
+    <h1 class="hero__title">우리 회사의<br class="br-m" /> 사람과 시간,<br />한눈에 보여요</h1>
     <div class="hero__desc">
       <p>누가 어떤 일을 하는지, 새 일을 맡길 사람이 있는지, 그 일이 목표로 이어지는지. 보고서 없이 팀이 남긴 기록만으로 알 수 있어요.</p>
       <p class="hero__note">얼리 액세스 동안 무료, 정식 출시 후에도 3개월 더 무료예요</p>
@@ -266,7 +266,7 @@
         <img class="s6__navigator-m" src="assets/s6-nav-m@3x.webp" width="342" height="622" alt="" />
         <img class="feat__visual-m" src="assets/s6-visual-m@3x.webp" width="1026" height="1929" alt="" />
       </div>
-      <figcaption class="caption">샘플 영상 · 예시 인물과 내용입니다. 스크립트는 매니저 화면에만 보입니다.</figcaption>
+      <figcaption class="caption">예시 인물과 내용입니다. 스크립트는 매니저 화면에만 보입니다.</figcaption>
     </figure>
     <div class="feat__cols reveal">
       <div class="feat__col">
@@ -337,6 +337,22 @@
       <div class="feat__visual feat__visual--short s8__visual">
         <img class="glow" src="assets/ellipse-glow.svg" width="1258" height="1258" alt="" />
         <img class="s8__sources" src="assets/s8-sources@3x.webp" width="444" height="300" alt="" />
+        <!-- 점선 위로 데이터가 흘러가는 모션 (SMIL). 선 좌표는 Figma 30:7081 벡터 23~27 — 짧고 밝은 선(앞쪽이 밝고 꼬리는 사라짐) -->
+        <svg class="s8__flow" viewBox="0 0 444 300" aria-hidden="true">
+          <defs>
+            <path id="s8f1" d="M72 208 L225 138" />
+            <path id="s8f2" d="M147 208 L225 138" />
+            <path id="s8f3" d="M225 208 L225 138" />
+            <path id="s8f4" d="M297 208 L225 138" />
+            <path id="s8f5" d="M372 208 L225 138" />
+            <linearGradient id="s8fg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0" /><stop offset="0.7" stop-color="currentColor" stop-opacity="0.9" /><stop offset="1" stop-color="currentColor" stop-opacity="1" /></linearGradient>
+          </defs>
+            <rect class="s8__flow-dash" x="-22" y="-1" width="22" height="2" rx="1" opacity="0"><animateMotion dur="2.8s" begin="0.00s" repeatCount="indefinite" rotate="auto"><mpath href="#s8f1" /></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.82;1" dur="2.8s" begin="0.00s" repeatCount="indefinite" /></rect>
+            <rect class="s8__flow-dash" x="-22" y="-1" width="22" height="2" rx="1" opacity="0"><animateMotion dur="2.8s" begin="0.50s" repeatCount="indefinite" rotate="auto"><mpath href="#s8f2" /></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.82;1" dur="2.8s" begin="0.50s" repeatCount="indefinite" /></rect>
+            <rect class="s8__flow-dash" x="-22" y="-1" width="22" height="2" rx="1" opacity="0"><animateMotion dur="2.8s" begin="1.00s" repeatCount="indefinite" rotate="auto"><mpath href="#s8f3" /></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.82;1" dur="2.8s" begin="1.00s" repeatCount="indefinite" /></rect>
+            <rect class="s8__flow-dash" x="-22" y="-1" width="22" height="2" rx="1" opacity="0"><animateMotion dur="2.8s" begin="1.50s" repeatCount="indefinite" rotate="auto"><mpath href="#s8f4" /></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.82;1" dur="2.8s" begin="1.50s" repeatCount="indefinite" /></rect>
+            <rect class="s8__flow-dash" x="-22" y="-1" width="22" height="2" rx="1" opacity="0"><animateMotion dur="2.8s" begin="2.00s" repeatCount="indefinite" rotate="auto"><mpath href="#s8f5" /></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.82;1" dur="2.8s" begin="2.00s" repeatCount="indefinite" /></rect>
+        </svg>
       </div>
       <figcaption class="caption">협업 도구 연동— 관리자가 회사 단위로 연결하면, 이미 쓰고 있는 도구의 활동이 1on1 브리핑과 스니핏 초안의 재료가 됩니다.</figcaption>
     </figure>
@@ -388,21 +404,18 @@
           <div class="s10__item">
             <img src="assets/icon-asterisk-white.svg" width="50" height="50" alt="" />
             <span class="headline">워크플로우</span>
-            <span class="s10__sub">말 한 줄로 업무 흐름을<br />만듭니다</span>
           </div>
           <div class="s10__item s10__item--user">
             <img src="assets/icon-user-white.svg" width="40" height="40" alt="" />
             <span class="headline">전자결재</span>
-            <span class="s10__sub">양식 하나 채우고<br />제출하면 끝</span>
           </div>
           <div class="s10__item">
             <img src="assets/icon-target-white.svg" width="50" height="50" alt="" />
             <span class="headline">휴가 · 연차</span>
-            <span class="s10__sub">연차는 근로기준법에 맞춰<br />자동 계산</span>
           </div>
         </div>
         <img class="s10__badge" src="assets/s10-badge@2x.png" width="112" height="52" alt="곧 출시" />
-        <span class="s10__badge-m">곧 출시</span>
+        <img class="s10__badge-m" src="assets/s10-badge-m@2x.png" width="83" height="37" alt="곧 출시" />
       </div>
       <figcaption class="caption">다른 기능과 연결 — 승인된 휴가는 따로 알리지 않아도 곳곳에 반영됩니다.</figcaption>
     </figure>
@@ -442,37 +455,37 @@
 <section class="faq wrap reveal" id="faq">
   <div class="faq__title"><img class="faq__title-d" src="assets/faq-title.svg" width="401" height="107" alt="Frequently asked questions" /><img class="faq__title-m" src="assets/faq-title-m.svg" width="230" height="61" alt="Frequently asked questions" /></div>
   <div class="faq__list">
-    <details class="faq__item" open>
+    <details class="faq__item">
       <summary class="faq__q"><span>얼리 액세스는 어떻게 신청하나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
       <p class="faq__a body">회사 단위로 신청합니다. 운영팀이 신청 내용을 확인한 뒤, 순서대로 묶어서 초대 메일을 보내 드립니다.</p>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>비용이 드나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <p class="faq__a body">얼리 액세스 기간에는 무료입니다. 정식 출시 후에도 3개월 더 무료로 쓰실 수 있습니다.</p>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>전자결재와 휴가 관리도 쓸 수 있나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <p class="faq__a body">곧 출시합니다. 전자결재·워크플로우·휴가는 기본 요금제와 별도인 «전자결재 · 휴가 패키지»로 제공하고, 출시 시점은 따로 안내해 드립니다.</p>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>투입 비율은 누가 정하고, 어디에 쓰이나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <div class="faq__a body"><p>팀원 본인이 적습니다. 기준은 프로젝트 규모가 아니라 본인의 가용 업무 시간 100%입니다. 스니핏 기록으로 만든 추정치를 참고할 수 있지만, 본인이 저장하기 전에는 반영되지 않습니다.</p><p>이 값은 평가 점수나 인건비 정산에 쓰지 않습니다. 회사의 사람이 어느 일에 쓰이고 있는지, 새 일을 맡길 수 있는 사람이 누구인지 보고 함께 정하기 위한 값입니다.</p></div>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>인사 부서만 쓰는 도구인가요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <p class="faq__a body">아닙니다. 대표와 조직장이 조직 현황·OKR·매니저 화면을 직접 보고, 팀원은 스니핏과 투입 비율로 자기 기록을 남깁니다. 정기 평가 운영처럼 회사 전체를 다루는 설정은 관리자 메뉴에 따로 있습니다.</p>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>AI 가 알아서 업무를 재배분하나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <div class="faq__a body"><p>아닙니다. 모든 AI 기능은 사용자가 버튼을 눌렀을 때만 실행되고, AI 가 투입 비율이나 담당을 바꾸지 않습니다. AI 는 상태를 정리하고 1on1 에서 다룰 주제를 제안합니다. 실제 조정은 매니저와 팀원이 이야기한 뒤 팀원이 직접 저장합니다.</p><p>AI 가 쓴 초안은 노란색(확인 전)으로 표시되고, 사람이 확인하면 초록색으로 바뀝니다.</p></div>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>대표와 조직장은 누구의 정보를 볼 수 있나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <div class="faq__a body"><p>조직장은 자신이 맡은 조직의 구성원만 봅니다. 조직장에서 내려오면 그 순간 볼 수 있는 범위도 사라집니다. 볼 자격이 없는 기록은 화면뿐 아니라 AI 입력에도 들어가지 않습니다.</p><p>리소스의 「조직 현황」은 조회 전용이고, 대표는 전사를, 본부장·부문장은 자기 조직을 봅니다. 조직 단위 평균에는 팀원이 직접 추가한 업무 이름이나 KR 제목이 드러나지 않습니다.</p></div>
     </details>
     <details class="faq__item">
       <summary class="faq__q"><span>연동한 도구의 데이터는 어떻게 다루나요?</span><img src="assets/icon-chevron-down.svg" width="24" height="24" alt="" /></summary>
-      <p class="faq__a body">답변 준비 중입니다.</p>
+      <div class="faq__a body"><p>외부 도구의 접속 토큰은 암호화(AES-256)해 저장합니다. Slack DM 은 직원 본인이 명시적으로 동의한 경우에만 가져오고, 동의를 철회하면 그 동의로 가져온 DM 은 복구할 수 없게 파기합니다.</p><p>연동을 해제하면 새로 가져오는 것만 멈추고, 그동안 가져온 기록은 남습니다. 남은 기록을 지우려면 고객지원으로 요청해 주세요.</p></div>
     </details>
   </div>
 </section>
@@ -565,7 +578,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
-<script src="glass.js?v=20261110m"></script>
-<script src="main.js?v=20261110m"></script>
+<script src="glass.js?v=20261110z"></script>
+<script src="main.js?v=20261110z"></script>
 </body>
 </html>

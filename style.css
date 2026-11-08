@@ -8,7 +8,6 @@
   /* --- Figma 값 중 tokens.css에 없는 것 (tokens.json 추가 검토) --- */
   --web-gray-900: #1d1f26;              /* Figma "Gray / 900" : 헤드라인 */
   --web-gray-600: #747a84;              /* Figma "Gray / 600" : 본문 */
-  --web-cyan-badge: #37eff8;            /* 모바일 "곧 출시" 배지 (Figma 30:5052) */
   --web-shadow-modal-m: 0 3.9px 16.8px -0.7px var(--colors-effects-shadows-shadowXl03), 0 5.9px 33.6px -3.4px var(--colors-effects-shadows-shadow3xl01); /* 모바일 섹션4 카드2 모달 그림자 (Figma 30:2256 effects, 0.04 / 0.14) */
   --web-pill-dark: rgba(41, 45, 52, 0.33);
   --web-s2-green-overlay: rgba(0, 117, 51, 0.2);
@@ -132,8 +131,7 @@ details summary::-webkit-details-marker { display: none; }
 }
 .gnb.is-dark::before {
   opacity: 1;
-  /* 가장자리 1.5px 를 어둡게 덮어, 오목 굴절이 요소 밖을 샘플링하며 생기는 색 번짐 선을 가린다 (유리 테두리 역할) */
-  box-shadow: inset 0 0 0 1.5px var(--componentColors-alpha-alphaBlack20);
+  /* 림 box-shadow 는 두지 않는다: 존재하지 않는 alphaBlack20 토큰을 참조해 원래 적용되지 않던 규칙이었고, 실제 색으로 바꾸면 검은 테두리로 보인다 */
 }
 .gnb.is-dark::after { opacity: 0; }
 
@@ -325,7 +323,11 @@ details summary::-webkit-details-marker { display: none; }
   visibility: hidden; transform: translateX(40px);
 }
 /* 내용 스크롤 영역: 패딩 70/48/48 (Figma), 내용이 길면 내부 스크롤 */
-.s4__modal-scroll { height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 70px 48px 48px; }
+.s4__modal-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 70px 42px 48px 48px; scrollbar-width: thin; scrollbar-color: var(--componentColors-alpha-alphaBlack40) transparent; }
+/* 세로 스크롤바는 6px 로 얇게, 오른쪽 패딩(48) 안에 띄운다 → 콘텐츠 폭(503)을 밀지 않고 가로 스크롤도 생기지 않음 */
+.s4__modal-scroll::-webkit-scrollbar { width: 6px; }
+.s4__modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.s4__modal-scroll::-webkit-scrollbar-thumb { background: var(--componentColors-alpha-alphaBlack40); border-radius: 9999px; }
 .s4__modal.is-open { visibility: visible; }
 /* 모달 열림: 페이지 스크롤 잠금 (scrollY 는 유지 — ScrollTrigger 상태 보존) */
 html.is-locked { overflow: hidden; }
@@ -422,6 +424,9 @@ html.is-locked { overflow: hidden; }
 /* s8 */
 .s8__visual { background: url("assets/s8-bg.webp") center / cover no-repeat; }
 .s8__sources { position: absolute; left: calc(407 * var(--u)); top: calc(159 * var(--u)); width: calc(444 * var(--u)); height: calc(300 * var(--u)); }
+.s8__flow { position: absolute; left: calc(407 * var(--u)); top: calc(159 * var(--u)); width: calc(444 * var(--u)); height: auto; aspect-ratio: 444 / 300; pointer-events: none; overflow: visible; color: var(--colors-text-textWhite); }
+.s8__flow-dash { fill: url(#s8fg); filter: drop-shadow(0 0 3px var(--componentColors-alpha-alphaWhite80)); }
+@media (prefers-reduced-motion: reduce) { .s8__flow { display: none; } }
 
 /* s9 */
 .s9__visual { background: url("assets/s9-bg@2x.webp") center / cover no-repeat; }
@@ -456,6 +461,7 @@ html.is-locked { overflow: hidden; }
 .faq__q img { transition: transform .1s ease-out; flex: none; }
 .faq__item.is-open .faq__q img { transform: rotate(180deg); transition-duration: .3s; }
 .faq__a { margin-top: 10px; overflow: hidden; }
+.faq__a p + p { margin-top: 1em; } /* 여러 문단 답변 */
 
 /* ---------- Footer ---------- */
 .footer { position: relative; margin-top: calc(-182 * var(--u)); min-height: calc(1931 * var(--u)); /* 내용이 길어지면(좁은 폭) 푸터가 아래로 늘어난다 */ color: var(--colors-text-textPrimaryOnBrand); overflow: hidden; /* 2200px 배경이 문서 폭을 넘지 않게 */ }
@@ -481,7 +487,7 @@ html.is-locked { overflow: hidden; }
 .footer__logo img { width: 100%; height: 100%; }
 
 /* 모바일 전용 요소 (≤600px 에서만 표시) */
-.s3__tabs, .s3__current, .s4__mock-m, .s6__navigator-m, .s7__screen-m, .s9__modal-m, .feat__visual-m, .s10__badge-m, .s10__sub, .faq__title-m, .br-m { display: none; }
+.s3__tabs, .s3__current, .s4__mock-m, .s6__navigator-m, .s7__screen-m, .s9__modal-m, .feat__visual-m, .s10__badge-m, .faq__title-m, .br-m { display: none; }
 
 /* ---------- Scroll reveal (generic) ---------- */
 .reveal { opacity: 0; }
@@ -582,11 +588,14 @@ html.is-locked { overflow: hidden; }
   .s4__stage { width: 100%; height: auto; }
   .s4__card { height: auto; border: 0; border-radius: 0; background: none; overflow: visible; display: flex; flex-direction: column; gap: 25px; }
   .s4__slide { position: relative; inset: auto; opacity: 1; pointer-events: auto; aspect-ratio: 343 / 527; border-radius: 24px; overflow: hidden; border: 1px solid var(--componentColors-alpha-alphaBlack5); }
-  .s4__head { top: 7.2%; transform: none; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 0 16px; }
-  .s4__eyebrow { font-size: 14px; font-weight: 500; line-height: 1.63; letter-spacing: -0.42px; }
-  .s4__title { margin: 0; opacity: 1; font-size: 27px; }
+  /* 카드 안 텍스트·간격은 카드 폭 비율(--cu = 카드폭/343)로 스케일 → 393 보다 넓은 모바일 뷰포트에서도 Figma 30:1899 와 같은 구성(타이틀 3줄) 유지 */
+  .s4__slide { --cu: calc((100vw - 50px) / 343); }
+  .s4__head { top: 7.2%; transform: none; display: flex; flex-direction: column; align-items: center; gap: calc(24 * var(--cu)); padding: 0 calc(16 * var(--cu)); }
+  .s4__eyebrow { font-size: calc(14 * var(--cu)); font-weight: 500; line-height: 1.63; letter-spacing: -0.03em; }
+  .s4__title { margin: 0; opacity: 1; font-size: calc(27 * var(--cu)); line-height: 1.31; letter-spacing: -0.01em; }
   .s4__caption, .s4__more { position: static; transform: none; opacity: 1; }
-  .s4__caption { margin-top: -12px; }
+  .s4__caption { margin-top: calc(-12 * var(--cu)); font-size: calc(12 * var(--cu)); letter-spacing: -0.03em; }
+  .s4__more { font-size: calc(12 * var(--cu)); letter-spacing: -0.03em; padding: calc(6 * var(--cu)) calc(12 * var(--cu)); }
   .s4__mock { display: none; }
   .s4__mock-m { display: block; position: absolute; height: auto; }
   /* 모바일 목업 export(MCP)는 부모 bg 가 합성돼 나오므로 모달 본체만 잘라 쓰고 코너·그림자는 CSS 로 (Figma 30:1904 / 30:2256 / 30:2451) */
@@ -594,7 +603,7 @@ html.is-locked { overflow: hidden; }
   .s4__mock-m--2 { left: 6.57%; top: 55.8%; width: 87.44%; border-radius: 4.5px; box-shadow: var(--web-shadow-modal-m); }
   .s4__mock-m--3 { left: 6.7%; top: 64.1%; width: 87.2%; border-radius: 4.6px; }
   .s4__modal { width: calc(100vw - 32px); }
-  .s4__modal-scroll { padding: 60px 24px 32px; }
+  .s4__modal-scroll { padding: 60px 18px 32px 24px; }
   .s4__modal-body { width: 100%; }
 
   /* Section 5 : Figma 30:2647 (764×888, x −185) 좌표를 --mu 로 비례 */
@@ -633,15 +642,16 @@ html.is-locked { overflow: hidden; }
   .s8__visual, .s10__visual { background-size: 100% 199%; background-position: center 50%; }
   .glow { width: 185.4%; height: auto; }
   .s8__sources { left: 18.1%; top: 38.4%; width: 64%; height: auto; }
-  .s10__pill { flex-direction: column; align-items: center; top: 19.2%; gap: calc(21.8 * var(--mu)); padding: calc(47.3 * var(--mu)) calc(63.6 * var(--mu)); }
+  .s8__flow { left: 18.1%; top: 38.4%; width: 64%; }
+  /* Figma 30:4937 (342×643): 알약 top 159, padding 47.3/50, gap 34 — 라벨만(보조 문구 없음); 배지는 image 83 (83×37, top 140) */
+  .s10__pill { flex-direction: column; align-items: center; top: 24.7%; gap: calc(34 * var(--mu)); padding: calc(47.3 * var(--mu)) calc(50 * var(--mu)); }
   .s10__item { width: auto; gap: 3.6px; }
   .s10__item--user { padding-top: 5.5px; }
   .s10__item img { width: 30px; height: 30px; }
   .s10__item--user img { width: 24px; height: 24px; }
   .s10__item .headline { font-size: 12.7px; font-weight: 600; line-height: 1.63; letter-spacing: -0.13px; }
-  .s10__sub { display: block; font-size: 8.5px; font-weight: 500; line-height: 1.63; letter-spacing: -0.25px; color: var(--colors-text-textWhite); text-align: center; white-space: nowrap; }
   .s10__badge { display: none; }
-  .s10__badge-m { display: block; position: absolute; left: 50%; top: 15.2%; transform: translateX(-50%); padding: 7px 22px; border-radius: 9999px; background: var(--web-cyan-badge); color: var(--colors-text-textWhite); font-size: 14px; font-weight: 500; line-height: 1.63; letter-spacing: -0.42px; white-space: nowrap; }
+  .s10__badge-m { display: block; position: absolute; left: 50%; top: 21.8%; transform: translateX(-50%); width: calc(83 * var(--mu)); height: auto; }
 
   /* FAQ */
   .faq { margin-top: 161px; height: auto; flex-direction: column; gap: 48px; }

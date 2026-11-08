@@ -49,6 +49,28 @@
     gsap.to(a, { height: 0, opacity: 0, marginTop: 0, duration: 0.1, ease: 'power1.out',
       onComplete: () => { d.open = false; gsap.set(a, { clearProps: 'height,opacity,marginTop' }); } });
   };
+  /* 데스크톱 FAQ 는 고정 높이(푸터가 밀리지 않게). 답변 길이가 달라도 넘치지 않도록 '가장 긴 답변을 연 상태'의 높이를 재서 예약한다 (Figma 745*u 보다 작아지진 않음) */
+  const faq = document.querySelector('.faq');
+  const fitFaq = () => {
+    if (!faq || !faqItems.length) return;
+    if (window.matchMedia('(max-width: 600px)').matches) { faq.style.height = ''; return; }
+    faq.style.height = '';
+    const base = faq.getBoundingClientRect().height;             // CSS 고정 높이(745*u)
+    const clone = faq.cloneNode(true);
+    clone.style.cssText = 'position:absolute;left:0;top:0;width:' + faq.getBoundingClientRect().width + 'px;height:auto;visibility:hidden;pointer-events:none;margin:0;';
+    clone.querySelectorAll('.faq__a').forEach((a) => a.removeAttribute('style'));
+    faq.parentNode.appendChild(clone);
+    const cItems = Array.from(clone.querySelectorAll('.faq__item'));
+    let max = 0;
+    cItems.forEach((ci) => { cItems.forEach((o) => { o.open = o === ci; }); max = Math.max(max, clone.getBoundingClientRect().height); });
+    clone.remove();
+    if (max > base + 0.5) faq.style.height = Math.ceil(max) + 'px';
+  };
+  let faqFitRaf = 0;
+  const scheduleFitFaq = () => { cancelAnimationFrame(faqFitRaf); faqFitRaf = requestAnimationFrame(fitFaq); };
+  fitFaq();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFitFaq);
+  window.addEventListener('resize', scheduleFitFaq);
   faqItems.forEach((d) => {
     if (d.open) d.classList.add('is-open');
     if (!faqAnimated) {                                       // GSAP 없음/모션 축소: 네이티브 토글 + 하나만 열기
