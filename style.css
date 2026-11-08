@@ -524,19 +524,19 @@ html.is-locked { overflow: hidden; }
   :root { --u: 1px; --mu: calc(100vw / 393); --container: 100%; }
   .wrap { width: 100%; padding-left: 24px; padding-right: 24px; }
 
-  /* 타이포 (Mobile/H0 32, H1 27, H3 20, H4 19, Body 14, Caption 12) */
+  /* 타이포 (Mobile/H0 32, H1 27, H3 20, H4 19, Headline 21, Body 16, Caption 12 — 2026-11-11 디자인: Body 14→16) */
   .h0, .h1, .h3, .hero__title, .s1__line, .s4__title, .s5__caption, .feat__sub, .footer__msg .h3 { word-break: keep-all; } /* 한글 단어 중간 끊김 방지 */
   .h0, .hero__title { font-size: 32px; line-height: 1.33; }
+  .hero__title { font-size: min(32px, calc(100vw * 32 / 393)); } /* 393 보다 좁은 폰(360 등)에서도 "우리 회사의 사람과 시간," 이 한 줄 */
   .h1 { font-size: 27px; line-height: 1.31; letter-spacing: -0.27px; }
   .h3 { font-size: 20px; line-height: 1.41; }
-  .body { font-size: 14px; letter-spacing: -0.42px; }
 
-  /* GNB 0.718배, 우상단 고정 CTA 없음 */
-  .gnb { top: 14px; padding: 17.23px 28.72px; gap: 34.46px; }
-  .gnb__logo { width: 61px; height: 21.66px; }
-  .gnb__nav { gap: 17.23px; }
+  /* GNB 0.8955배 (Figma 30:1854: 335×70, 패딩 21.5/35.8, 로고 76×27, 메뉴 14.33), 우상단 고정 CTA 없음 */
+  .gnb { top: 14px; padding: 21.5px 35.8px; gap: 43px; }
+  .gnb__logo { width: 76.1px; height: 27px; }
+  .gnb__nav { gap: 21.5px; }
   .gnb { white-space: nowrap; }
-  .gnb__nav a { font-size: 11.49px; letter-spacing: -0.34px; }
+  .gnb__nav a { font-size: 14.33px; letter-spacing: -0.43px; }
   .cta--fixed { display: none; }
 
   /* Hero (393×852 → 화면 높이) */
@@ -544,9 +544,9 @@ html.is-locked { overflow: hidden; }
   .hero__content { gap: 32px; width: 100%; }
   .hero__eyebrow { font-size: 16px; }
   .hero__desc { width: 100%; }
-  .hero__desc p { font-size: 14px; letter-spacing: -0.42px; }
+  .hero__desc p { font-size: 16px; letter-spacing: -0.48px; }
   .hero__desc .hero__note { font-size: 12px; letter-spacing: -0.36px; }
-  .hero .cta { padding: 16px 32px; font-size: 14px; letter-spacing: -0.42px; }
+  .hero .cta { padding: 16px 32px; font-size: 14px; letter-spacing: -0.42px; margin-top: 16px; } /* Figma: 보조 문구 → 버튼 48 (콘텐츠 gap 32 + 16) */
   .hero__scroll img { width: 76px; height: 43px; }
 
   /* Video : 배경 2008×760 을 히어로와 같은 배율로 이어 붙임, 16:9 프레임 */
@@ -568,7 +568,7 @@ html.is-locked { overflow: hidden; }
   .s2__target { width: 42.5%; height: auto; }
 
   /* Logos */
-  .logos { margin-top: 68px; height: 112px; }
+  .logos { margin-top: 45px; height: 112px; } /* Figma: 섹션 2 끝 3490 → 로고 3534 */
   .logos__track img { width: 1811px; height: 112px; }
 
   /* Section 3 : 탭 + 스테이지 + 현재 스텝 설명 */
@@ -586,10 +586,10 @@ html.is-locked { overflow: hidden; }
   .s3__current-head { display: flex; align-items: center; gap: 8px; }
   .s3__current-head img { width: 30px; height: 30px; }
   .s3__current-head b { font-size: 19px; font-weight: 700; line-height: 1.41; color: var(--web-gray-900); }
-  .s3__current p { font-size: 14px; font-weight: 500; line-height: 1.63; letter-spacing: -0.42px; color: var(--web-gray-600); }
+  .s3__current p { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; color: var(--web-gray-600); }
 
   /* Section 4 : 스크롤 스토리 없이 카드 3장 세로 나열 (Figma 30:1899 / 2076 / 2346, 343×527) */
-  .s4 { margin-top: 104px; }
+  .s4 { margin-top: 101px; }
   .s4__sticky { display: block; min-height: 0; padding: 0 25px; }
   .s4__stage { width: 100%; height: auto; }
   .s4__card { height: auto; border: 0; border-radius: 0; background: none; overflow: visible; display: flex; flex-direction: column; gap: 25px; }
@@ -597,7 +597,7 @@ html.is-locked { overflow: hidden; }
   /* 카드 안 텍스트·간격은 카드 폭 비율(--cu = 카드폭/343)로 스케일 → 393 보다 넓은 모바일 뷰포트에서도 Figma 30:1899 와 같은 구성(타이틀 3줄) 유지 */
   .s4__slide { --cu: calc((100vw - 50px) / 343); }
   .s4__head { top: 7.2%; transform: none; display: flex; flex-direction: column; align-items: center; gap: calc(24 * var(--cu)); padding: 0 calc(16 * var(--cu)); }
-  .s4__eyebrow { font-size: calc(14 * var(--cu)); font-weight: 500; line-height: 1.63; letter-spacing: -0.03em; }
+  .s4__eyebrow { font-size: calc(16 * var(--cu)); font-weight: 500; line-height: 1.63; letter-spacing: -0.03em; }
   .s4__title { margin: 0; opacity: 1; font-size: calc(27 * var(--cu)); line-height: 1.31; letter-spacing: -0.01em; }
   .s4__caption, .s4__more { position: static; transform: none; opacity: 1; }
   .s4__more, .s4__caption + .s4__more { margin-top: 0; }
@@ -630,9 +630,13 @@ html.is-locked { overflow: hidden; }
   .s5__card--menu     { left: calc(1 * var(--mu));   top: calc(485 * var(--mu)); width: calc(124 * var(--mu)); }
 
   /* 기능 섹션 6~10 : 비주얼 342×643, 컬럼 세로 나열 */
-  .feat { margin-top: 182px; gap: 40px; }
+  .feat { gap: 40px; }
+  /* 섹션 간격: Figma 30:1048 프레임 시작 y (7016 / 8751 / 10565 / 12211 / 13351) 기준 */
   #features { margin-top: 25px; }
-  .feat--s9, #s10 { margin-top: 182px; }
+  #s7 { margin-top: 78px; }
+  #s8 { margin-top: 156px; }
+  .feat--s9 { margin-top: 135px; }
+  #s10 { margin-top: 171px; }
   .feat__head { flex-direction: column; align-items: flex-start; gap: 20px; }
   .feat__head--s7 .h1 { flex: none; }
   .feat__sub { white-space: normal; padding-bottom: 8px; }
@@ -661,21 +665,22 @@ html.is-locked { overflow: hidden; }
   .s10__badge-m { display: block; position: absolute; left: 50%; top: 21.8%; transform: translateX(-50%); width: calc(83 * var(--mu)); height: auto; }
 
   /* FAQ */
-  .faq { margin-top: 161px; height: auto; flex-direction: column; gap: 48px; }
+  .faq { margin-top: 146px; height: auto; flex-direction: column; gap: 48px; } /* Figma 2026-11-11: 섹션 10 끝 15524 → FAQ 15679 (gap 155; 우리 섹션 10 이 9px 김) */
   .faq__title { flex: none; }
   .faq__title-d { display: none; }
   .faq__title-m { display: block; width: 230px; height: auto; }
   .faq__list { width: 100%; flex: none; }
-  .faq__q { font-size: 14px; letter-spacing: -0.42px; }
+  .faq__q { font-size: 16px; letter-spacing: -0.48px; }
+  .faq__q span { word-break: keep-all; }
 
   /* Footer : 배경 1376×1207, 메시지 168 / 법적고지 / 로고 */
-  .footer { margin-top: -35px; min-height: calc(1207 * var(--mu)); }
+  .footer { margin-top: -74px; min-height: calc(1207 * var(--mu)); } /* Figma: FAQ 15679 → 푸터 bg 16476 (FAQ 와 161 겹침) */
   .footer__bg { width: calc(1376 * var(--mu)); }
   .footer__inner { min-height: calc(1207 * var(--mu)); padding: calc(168 * var(--mu)) 24px calc(44 * var(--mu)); justify-content: flex-start; } /* 메시지 그룹은 상단 168 고정 (Figma 30:5121 y 16491 − bg 16323), 배경과 같이 --mu 비례 */
   .footer__msg { width: 100%; }
   .footer__msg-text { gap: 21px; }
   .footer__promo { font-size: 19px; font-weight: 700; line-height: 1.41; letter-spacing: 0; }
-  .footer__msg .cta { padding: 8px 20px; font-size: 14px; font-weight: 700; letter-spacing: -0.42px; }
+  .footer__msg .cta { padding: 8px 20px; font-size: 16px; font-weight: 700; letter-spacing: -0.48px; }
   .footer__legal { margin-top: auto; padding-top: 40px; flex-direction: column; align-items: flex-start; gap: 40px; } /* 법적고지 + 로고는 항상 푸터 최하단에 붙는다 (393 기준 770 / 1041) */
   .footer__company { width: 100%; }
   .footer__logo { margin-top: 76px; height: auto; }
