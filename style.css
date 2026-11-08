@@ -394,7 +394,7 @@ html.is-locked { overflow: hidden; }
 /* ---------- Feature sections (6~10) ---------- */
 .feat { margin-top: calc(277 * var(--u)); display: flex; flex-direction: column; gap: 64px; }
 .feat--s9 { margin-top: calc(389 * var(--u)); }
-#s10 { margin-top: calc(91 * var(--u)); /* Figma: 섹션 9 컬럼이 프레임 밖(868→1062)으로 내려와 있어 실제 간격은 91 */ }
+#s10 { margin-top: calc(277 * var(--u)); } /* 섹션 9 컬럼이 사라져 다른 기능 섹션과 같은 277 간격 */
 #features { margin-top: 0; }
 .feat__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
 .feat__head--s7 .h1 { flex: 1; }
@@ -453,16 +453,18 @@ html.is-locked { overflow: hidden; }
 .faq { position: relative; z-index: 2; margin-top: calc(233 * var(--u)); height: calc(745 * var(--u)); display: flex; align-items: flex-start; }
 .faq__title { flex: 1 0 0; }
 .faq__list { flex: 1 0 0; display: flex; flex-direction: column; gap: 13px; }
-.faq__item { background: var(--colors-background-bgPrimary); border-radius: 16px; padding: 24px 32px; }
+.faq__item { background: var(--colors-background-bgPrimary); border-radius: 16px; padding: 24px 32px; cursor: pointer; }
 .faq__q {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   cursor: pointer; font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px;
   color: var(--web-gray-900);
+  -webkit-user-select: none; user-select: none; /* 클릭(더블클릭) 시 질문 텍스트가 선택되지 않게 */
 }
+.faq__q::-webkit-details-marker { display: none; }
 /* 화살표: 펼칠 때 0.3s, 접을 때 0.1s (JS 가 is-open 클래스를 즉시 토글) */
 .faq__q img { transition: transform .1s ease-out; flex: none; }
 .faq__item.is-open .faq__q img { transform: rotate(180deg); transition-duration: .3s; }
-.faq__a { margin-top: 10px; overflow: hidden; }
+.faq__a { margin-top: 10px; overflow: hidden; cursor: auto; }
 .faq__a p + p { margin-top: 1em; } /* 여러 문단 답변 */
 
 /* ---------- Footer ---------- */

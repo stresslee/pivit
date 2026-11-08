@@ -77,7 +77,9 @@
       d.addEventListener('toggle', () => { if (d.open) faqItems.forEach((o) => { if (o !== d) o.open = false; }); });
       return;
     }
-    d.querySelector('.faq__q').addEventListener('click', (e) => {
+    // 질문 텍스트가 아니라 항목 블록 전체가 클릭 영역 (답변 영역 클릭은 제외). summary 의 네이티브 토글은 막고 GSAP 으로 연다
+    d.addEventListener('click', (e) => {
+      if (e.target.closest('.faq__a')) return;
       e.preventDefault();
       if (d.classList.contains('is-open')) faqClose(d);
       else { faqItems.forEach((o) => { if (o !== d && o.classList.contains('is-open')) faqClose(o); }); faqOpen(d); }
@@ -184,7 +186,10 @@
       const target = id ? document.getElementById(id) : document.body;
       if (!target) return;
       e.preventDefault();
-      gsap.to(window, { duration: 1, ease: 'power2.inOut', scrollTo: { y: id ? target : 0, autoKill: false },
+      // 섹션 상단을 뷰포트 맨 위에 붙이면 제목이 고정 GNB 뒤에 숨는다 → GNB 아래 여백(GNB 하단 + 48)만큼 내려서 멈춘다
+      const gnbEl = document.getElementById('gnb');
+      const offsetY = id ? Math.round((gnbEl ? gnbEl.getBoundingClientRect().bottom : 0) + 48) : 0;
+      gsap.to(window, { duration: 1, ease: 'power2.inOut', scrollTo: { y: id ? target : 0, offsetY, autoKill: false },
         onComplete: () => { history.replaceState(null, '', id ? '#' + id : location.pathname); ScrollTrigger.update(); } });
     });
   });
