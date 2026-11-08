@@ -613,5 +613,168 @@
     };
   }
 
-  window.PivitGlass = { mount, mountField, refractsBackdrop };
+  // WebKit(iOS·사파리) 용 GNB 굴절 근사 — backdrop-filter 에 SVG 렌즈를 못 걸고, SVG 필터는 CPU 라 매 프레임 쓰기엔 느리다.
+  // 대신 GNB 뒤 페이지(main·footer)의 복제본을 GNB 모양으로 잘라 두 겹 넣는다:
+  //   rim  : 알약 중심 기준으로 (sx, sy) 만큼 축소한 복제본 → 가장자리 띠에서 바깥 콘텐츠가 안으로 당겨져 보인다 (유리 베벨)
+  //   base : 1:1 복제본을 `bevel` 만큼 안쪽으로 들어간 알약으로 잘라 rim 위에 올린다 → 중앙은 그대로
+  // 변환·클립만 쓰므로 GPU 합성으로 끝나고, 복제본은 MutationObserver 로 원본 속성을 따라가며 스크롤만큼 반대로 이동한다.
+  // WebKit 은 레이어 안 콘텐츠가 너무 크면 렌더가 불안정해 GNB 띠에 걸친 최상위 블록만 표시한다.
+  function mountMirror(element, opts = {}) {
+    const bevel = opts.bevel ?? 14;                                   // 가장자리 띠 폭(px)
+    const pull = opts.pull ?? 12;                                     // 띠 바깥쪽에서 안으로 당겨 오는 거리(px)
+    const sources = (opts.sources || []).filter(Boolean);
+    const excluded = (opts.exclude || []).flatMap((sel) => Array.from(document.querySelectorAll(sel)));
+    const mirror = document.createElement("div");
+    mirror.className = "gnb__mirror";
+    mirror.setAttribute("aria-hidden", "true");
+    mirror.inert = true;
+    const layers = ["rim", "base"].map((kind) => {
+      const box = document.createElement("div");
+      box.className = `gnb__mirror-${kind}`;
+      const inner = document.createElement("div");
+      inner.className = "gnb__mirror-inner";
+      box.append(inner);
+      mirror.append(box);
+      return { kind, box, inner, map: new Map(), blocks: [], live: [], fixed: new Set() };
+    });
+    element.prepend(mirror);
+    element.classList.add("has-mirror");
+    element.style.setProperty("--mirror-bevel", bevel + "px");
+    const hidden = new Set();                                         // display:none 으로 숨긴 복제 블록
+    let docTop = 0, sx = 1, sy = 1, masked = "";
+    const feather = opts.feather ?? 4;                                 // 마스크 가장자리 번짐(px)
+    const pair = (map, a, b) => {
+      map.set(a, b);
+      const ac = a.children, bc = b.children;
+      for (let i = 0; i < ac.length && i < bc.length; i++) pair(map, ac[i], bc[i]);
+    };
+    const fixUp = (orig, copy, layer) => {                            // GSAP pin 등 inline position:fixed 원본: 변환된 inner 안에서 fixed 는 inner 기준 absolute 처럼 동작 → 뷰포트 rect 차이만큼 보정
+      if (orig.style.position !== "fixed") { layer.fixed.delete(orig); return; }
+      layer.fixed.add(orig);
+      if (hidden.has(copy)) return;
+      const o = orig.getBoundingClientRect(), k = copy.getBoundingClientRect();
+      if (Math.abs(o.top - k.top) > 0.01) copy.style.top = `${parseFloat(copy.style.top || "0") + (o.top - k.top)}px`;
+      if (Math.abs(o.left - k.left) > 0.01) copy.style.left = `${parseFloat(copy.style.left || "0") + (o.left - k.left)}px`;
+    };
+    const build = () => {
+      hidden.clear();
+      if (!sources.length) return;
+      docTop = sources[0].getBoundingClientRect().top + scrollY;
+      const body = getComputedStyle(document.body);
+      mirror.style.background = body.backgroundColor !== "rgba(0, 0, 0, 0)" ? body.backgroundColor : getComputedStyle(document.documentElement).backgroundColor;
+      for (const layer of layers) {
+        layer.map = new Map(); layer.blocks = []; layer.live = []; layer.fixed.clear();
+        layer.inner.replaceChildren();
+        for (const src of sources) {
+          const copy = src.cloneNode(true);
+          pair(layer.map, src, copy);
+          layer.inner.append(copy);
+        }
+        for (const orig of excluded) layer.map.get(orig)?.remove();
+        for (const [orig, copy] of layer.map) {
+          if (orig.tagName === "SCRIPT" || orig.tagName === "VIDEO") copy.remove();
+          copy.removeAttribute("id");                                 // id 중복 방지 (레이아웃 규칙은 class 로)
+        }
+        layer.inner.style.width = document.documentElement.clientWidth + "px";
+        // GNB 에서 상속되는 속성(white-space:nowrap, 글꼴 등)이 복제본 레이아웃을 바꾸지 않도록 body 값으로 되돌린다
+        for (const p of ["font-family", "font-size", "font-weight", "line-height", "letter-spacing", "color", "white-space", "text-align", "word-break", "overflow-wrap", "direction", "text-rendering", "-webkit-font-smoothing", "font-feature-settings", "font-variant"]) layer.inner.style.setProperty(p, body.getPropertyValue(p));
+        for (const src of sources) {
+          const list = src.tagName === "MAIN" ? Array.from(src.children) : [src];
+          for (const orig of list) { const copy = layer.map.get(orig); if (copy && copy.isConnected) layer.blocks.push([orig, copy]); }
+        }
+        for (const orig of document.querySelectorAll(".logos__track")) { const c = layer.map.get(orig); if (c) { c.style.animation = "none"; layer.live.push([orig, c]); } }
+        for (const [orig, copy] of layer.map) if (orig.style.position === "fixed") fixUp(orig, copy, layer);
+      }
+      position();
+    };
+    const position = () => {
+      if (!element.classList.contains("is-dark")) return;            // 라이트 글래스 구간은 미러 숨김 (display:none)
+      const r = element.getBoundingClientRect();                      // 꿀렁임(scale)은 빼고 중심 기준으로 계산
+      const W = element.offsetWidth, H = element.offsetHeight;
+      const left = (r.left + r.right) / 2 - W / 2;
+      const top = (r.top + r.bottom) / 2 - H / 2;
+      const bandTop = top - pull - 4, bandBottom = top + H + pull + 4;      // 뷰포트 좌표의 GNB 띠 (당겨 올 여유 포함)
+      sx = (W / 2) / (W / 2 + pull); sy = (H / 2) / (H / 2 + pull);       // 가장자리에서 정확히 pull 만큼 바깥을 보여 주는 축소율
+      const maskKey = `${W}|${H}`;
+      if (maskKey !== masked) {                                       // base 를 안쪽 알약 모양의 부드러운 마스크로 잘라 rim 과의 경계(복제본 어긋남)를 베벨 폭 안에서 섞는다
+        masked = maskKey;
+        const base = layers.find((l) => l.kind === "base").box;
+        const rx = Math.max(0, H / 2 - bevel);
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${W} ${H}'><filter id='f' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='${feather}'/></filter><rect x='${bevel}' y='${bevel}' width='${W - 2 * bevel}' height='${H - 2 * bevel}' rx='${rx}' fill='white' filter='url(#f)'/></svg>`;
+        const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+        base.style.webkitMaskImage = url; base.style.maskImage = url;
+      }
+      for (const layer of layers) {
+        let anchor = null;
+        for (const [orig, copy] of layer.blocks) {
+          const b = orig.getBoundingClientRect();
+          const show = b.bottom > bandTop && b.top < bandBottom && b.height > 0;
+          if (show) { if (hidden.has(copy)) { hidden.delete(copy); copy.style.display = ""; } if (!anchor) anchor = [orig, copy, b]; }
+          else if (!hidden.has(copy)) { hidden.add(copy); copy.style.display = "none"; }
+        }
+        for (const [orig, copy] of layer.live) copy.style.transform = getComputedStyle(orig).transform;
+        if (!anchor) continue;
+        const inset = 0;                                                // 두 겹 모두 미러 박스 전체 크기 (base 는 마스크로 안쪽만 보인다)
+        const tx = -left - scrollX - inset, ty = docTop - scrollY - top - inset;
+        const place = (dx, dy) => {
+          const move = `translate(${tx + dx}px, ${ty + dy}px)`;
+          layer.inner.style.transform = layer.kind === "rim" ? `translate(${W / 2}px, ${H / 2}px) scale(${sx}, ${sy}) translate(${-W / 2}px, ${-H / 2}px) ${move}` : move;
+        };
+        place(0, 0);
+        // 숨긴 블록 때문에 복제본 레이아웃이 줄어드니, 첫 보이는 블록의 원본·복제 위치 차이로 보정한다 (rim 은 축소돼 있어 base 와 같은 보정값을 쓴다)
+        if (layer.kind === "base") {
+          const c = anchor[1].getBoundingClientRect();
+          layer.dx = anchor[2].left - c.left; layer.dy = anchor[2].top - c.top;
+        } else {
+          const base = layers.find((l) => l.kind === "base");
+          layer.dx = base.dx || 0; layer.dy = base.dy || 0;
+        }
+        if (Math.abs(layer.dx) > 0.01 || Math.abs(layer.dy) > 0.01) place(layer.dx, layer.dy);
+        for (const orig of layer.fixed) { const copy = layer.map.get(orig); if (copy) fixUp(orig, copy, layer); }
+      }
+    };
+    // base 를 먼저 맞춰야 rim 이 같은 보정값을 쓸 수 있다
+    layers.reverse();
+    let rebuildTimer = 0;
+    const scheduleRebuild = () => { clearTimeout(rebuildTimer); rebuildTimer = setTimeout(build, 50); };
+    const observer = new MutationObserver((records) => {
+      let structural = false;
+      for (const r of records) {
+        if (r.type !== "attributes") { structural = true; continue; }
+        if (r.attributeName === "id") continue;
+        for (const layer of layers) {
+          const copy = layer.map.get(r.target);
+          if (!copy) { if (!excluded.some((ex) => ex.contains(r.target))) structural = true; continue; }
+          const v = r.target.getAttribute(r.attributeName);
+          if (v === null) copy.removeAttribute(r.attributeName); else copy.setAttribute(r.attributeName, v);
+          if (r.attributeName === "style") { if (hidden.has(copy)) copy.style.display = "none"; fixUp(r.target, copy, layer); }
+        }
+      }
+      if (structural) scheduleRebuild();
+    });
+    build();
+    for (const src of sources) observer.observe(src, { attributes: true, subtree: true, childList: true, characterData: true });
+    const onScroll = () => position();
+    const onResize = () => scheduleRebuild();
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onResize);
+    const ro = new ResizeObserver(position);
+    ro.observe(element);
+    const classWatch = new MutationObserver(position);                 // is-dark 켜질 때 위치 갱신
+    classWatch.observe(element, { attributes: true, attributeFilter: ["class"] });
+    return {
+      setAmount() {},
+      refit: position, rebuild: scheduleRebuild,
+      destroy() {
+        observer.disconnect(); classWatch.disconnect(); ro.disconnect();
+        removeEventListener("scroll", onScroll); removeEventListener("resize", onResize);
+        mirror.remove();
+        element.classList.remove("has-mirror");
+        element.style.removeProperty("--mirror-bevel");
+      }
+    };
+  }
+  // backdrop-filter 에 SVG 렌즈를 못 거는 브라우저(WebKit/Firefox): CSS 가 굴절 대신 진한 프로스트 블러 폴백을 쓰도록 표시
+  if (!refractsBackdrop()) document.documentElement.classList.add("no-refract");
+  window.PivitGlass = { mount, mountField, mountMirror, refractsBackdrop };
 })();
