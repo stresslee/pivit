@@ -340,6 +340,8 @@ html.is-locked { overflow: hidden; }
 .s4__checks li { display: flex; gap: 12px; align-items: flex-start; }
 .s4__checks li img { flex: none; }
 .s4__checks .body { color: var(--colors-text-textSecondary); }
+.s4__check-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; } /* 모달 3: 라벨(Body/bold) + 설명 (Figma 48:3217) */
+.s4__check-text b.body { font-weight: 700; }
 .s4__rows { display: flex; flex-direction: column; gap: 5px; }
 .s4__row { display: flex; align-items: center; background: var(--colors-background-bgQuaternary); border-radius: 10px; height: 55px; }
 .s4__who { display: flex; align-items: center; gap: 7px; width: 85px; padding-left: 19px; flex: none; }
