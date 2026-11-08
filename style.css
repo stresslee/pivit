@@ -203,7 +203,7 @@ details summary::-webkit-details-marker { display: none; }
    핀된 요소의 가로는 항상 뷰포트 기준으로 둔다 */
 .pin-spacer > .s1, .pin-spacer > .s4__sticky { width: 100% !important; max-width: none !important; }
 .pin-spacer > .s1 { height: 100vh !important; max-height: none !important; }
-.s1 { height: 100vh; min-height: 640px; margin-top: calc(122 * var(--u)); /* 비디오 섹션(760) 끝 1784 → 섹션1 1906 (Figma) */ display: flex; align-items: center; /* 뷰포트 높이에 맞춰 핀 (Figma 1024 기준 레이아웃을 창 높이에 비례) */ }
+.s1 { position: relative; z-index: 1; /* 앞 섹션의 absolute 배경(.video__bg 페이드)보다 위에 그려지도록 */ height: 100vh; min-height: 640px; margin-top: calc(122 * var(--u)); /* 비디오 섹션(760) 끝 1784 → 섹션1 1906 (Figma) */ display: flex; align-items: center; /* 뷰포트 높이에 맞춰 핀 (Figma 1024 기준 레이아웃을 창 높이에 비례) */ }
 .s1__lines { display: flex; flex-direction: column; gap: 8px; text-align: center; }
 .s1__line {
   --t: 0; /* 0 = 회색, 1 = 검정. 스크롤 진행에 따라 JS가 갱신 */
@@ -551,7 +551,8 @@ html.is-locked { overflow: hidden; }
 
   /* Video : 배경 2008×760 을 히어로와 같은 배율로 이어 붙임, 16:9 프레임 */
   .video { height: 298px; }
-  .video__bg { height: 760px; background-size: auto max(calc(100vw * 760 / 2008), calc(100svh * 760 / 1024)); background-position: center top; }
+  /* 배경 높이 = 히어로(100svh, 2008:1024 cover)와 같은 배율의 760 → 이미지가 컨테이너를 꽉 채우고, 흰색 페이드(::after)가 이미지 끝에서 정확히 100% 가 되어 경계선이 생기지 않음 */
+  .video__bg { height: max(calc(100vw * 760 / 2008), calc(100svh * 760 / 1024)); background-size: auto 100%; background-position: center top; }
   .video__frame { top: 88px; width: calc(100vw - 91px); height: auto; aspect-ratio: 16 / 9; border-radius: 8px; }
 
   /* Section 1 */
