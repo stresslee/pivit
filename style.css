@@ -194,9 +194,9 @@ details summary::-webkit-details-marker { display: none; }
   color: var(--colors-text-textPrimaryOnBrand);
   text-align: center;
 }
-.hero__content { display: flex; flex-direction: column; align-items: center; gap: 32px; }
+.hero__content { display: flex; flex-direction: column; align-items: center; gap: 32px; width: 100%; }
 .hero__eyebrow { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
-.hero__title { font-size: 62px; line-height: 1.33; font-weight: 700; }
+.hero__title { font-size: 62px; line-height: 1.33; font-weight: 700; align-self: stretch; } /* 폭을 콘텐츠가 아니라 컨테이너에 고정: 이모지 치환으로 글자 폭이 변해도 SplitText autoSplit 이 재분할하지 않게 */
 .hero__desc { width: 432px; display: flex; flex-direction: column; gap: 6px; } /* 본문이 px 고정이라 폭도 고정 (줄 수 유지) */
 .hero__desc p { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
 .hero__desc .hero__note { font-size: 12px; font-weight: 400; letter-spacing: -0.36px; color: var(--componentColors-alpha-alphaWhite60); }

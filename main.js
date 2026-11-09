@@ -290,6 +290,8 @@
   });
 
   /* ---------- 섹션 타이틀(.split-lines: 섹션 2·3·6~10) : 줄 마스크 + 글자 단위 슬라이드 업 (카드 헤드라인은 적용 안 함 — 사용자 지시) (GSAP 'Responsive line splits on scroll' 데모 방식, SplitText 3.13 autoSplit 으로 리사이즈 시 재분할) ---------- */
+  let heroChars = [];                                       // 히어로 타이틀 글자 요소 (이모지 치환용, 재분할 때 갱신)
+  let heroEmojiReset = null;
   if (window.SplitText) {
     gsap.utils.toArray('.split-lines').forEach((el) => {
       // 히어로 타이틀은 첫 화면이라 스크롤 트리거 대신 진입 시퀀스의 두 번째 슬롯 시점에 재생
@@ -300,6 +302,7 @@
         // 줄 마스크는 유지하고 글자 하나하나가 아주 짧은 간격(8ms)으로 올라온다
         onSplit: (self) => {
           gsap.set(el, { opacity: 1 });   // 히어로 CSS(.hero__content > * { opacity: 0 }) 해제 — 분할된 뒤에만 보이게 해 깜빡임 방지
+          if (inHero) { heroChars = self.chars; heroChars.forEach((c) => { c.dataset.ch = c.textContent; }); heroEmojiReset && heroEmojiReset(); }
           return gsap.from(self.chars, {
             yPercent: 100, opacity: 0, ease: 'expo.out',
             duration: inHero ? HERO_TITLE_DUR : 0.8, stagger: inHero ? HERO_TITLE_STAGGER : 0.008,
@@ -310,6 +313,170 @@
         }
       });
     });
+  }
+
+  /* 한글 IME 타이핑 시뮬레이션 : 단어를 자모 키 입력 순서로 풀고, 키를 하나씩 누를 때 화면에 보이는 문자열을 돌려준다.
+     예) 회사 → ㅎ, 호, 회, 횟, 회사 / 보여 → ㅂ, 보, 봉, 보여 (다음 글자 초성은 먼저 앞 글자 받침으로 붙었다가 모음이 오면 분리) */
+  const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ', JUNG = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ', JONG = ' ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ';
+  const VOWEL_PAIR = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
+  const JONG_PAIR = { 'ㄳ': 'ㄱㅅ', 'ㄵ': 'ㄴㅈ', 'ㄶ': 'ㄴㅎ', 'ㄺ': 'ㄹㄱ', 'ㄻ': 'ㄹㅁ', 'ㄼ': 'ㄹㅂ', 'ㄽ': 'ㄹㅅ', 'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ', 'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ' };
+  const joinVowel = (a, b) => Object.keys(VOWEL_PAIR).find((k) => VOWEL_PAIR[k] === a + b) || null;
+  const joinJong = (a, b) => Object.keys(JONG_PAIR).find((k) => JONG_PAIR[k] === a + b) || null;
+  const compose = (cho, jung, jong) => {
+    if (!jung) return cho || '';
+    return String.fromCharCode(0xAC00 + (CHO.indexOf(cho) * 21 + JUNG.indexOf(jung)) * 28 + (jong ? JONG.indexOf(jong) : 0));
+  };
+  const typingSteps = (word) => {
+    // 1) 키 입력 열거
+    const keys = [];
+    for (const ch of Array.from(word)) {
+      const code = ch.charCodeAt(0) - 0xAC00;
+      if (code < 0 || code > 11171) { keys.push({ raw: ch }); continue; }
+      const cho = CHO[Math.floor(code / 588)], jung = JUNG[Math.floor((code % 588) / 28)], jong = JONG[code % 28].trim();
+      keys.push({ c: cho });
+      for (const v of (VOWEL_PAIR[jung] || jung)) keys.push({ v });
+      if (jong) for (const j of (JONG_PAIR[jong] || jong)) keys.push({ c: j });
+    }
+    // 2) IME 상태 머신
+    let done = '', cho = '', jung = '', jong = '';
+    const flush = () => { done += compose(cho, jung, jong); cho = jung = jong = ''; };
+    const steps = [];
+    for (const key of keys) {
+      if (key.raw) { flush(); done += key.raw; }
+      else if (key.c) {
+        if (cho && jung && !jong && JONG.indexOf(key.c) > 0) jong = key.c;                 // 받침으로
+        else if (cho && jung && jong && joinJong(jong, key.c)) jong = joinJong(jong, key.c); // 겹받침
+        else { flush(); cho = key.c; }
+      } else {
+        if (cho && !jung) jung = key.v;
+        else if (cho && jung && !jong && joinVowel(jung, key.v)) jung = joinVowel(jung, key.v); // 복모음
+        else if (cho && jung && jong) {                                                        // 받침이 다음 글자 초성으로 넘어감
+          const pair = JONG_PAIR[jong]; let moved = jong;
+          if (pair) { jong = pair[0]; moved = pair[1]; } else jong = '';
+          flush(); cho = moved; jung = key.v;
+        } else { flush(); done += key.v; }
+      }
+      steps.push(done + compose(cho, jung, jong));
+    }
+    return steps;
+  };
+
+  /* ---------- 히어로 타이틀 이모지 (Figma 67:3386) : 히어로가 보이는 상태에서 마우스 동작이 5초 없으면 회사→🏢, 사람→👻, 시간→⏰, 보여→👀 를
+     랜덤 순서로 2초에 하나씩 바꿔 보여 준다. 넷 다 바뀐 뒤에는 다시 랜덤 순서로 2초에 하나씩 이모지가 사라지고 글자가 한 자씩 타이핑되듯 돌아온다. 이 사이클을 마우스가 움직일 때까지 반복.
+     마우스가 움직이면 즉시 전부 원문으로. 마우스 환경에서만 ---------- */
+  const heroTitle = document.querySelector('.hero__title');
+  if (heroTitle && window.SplitText && hoverMq.matches) {
+    const WORDS = [['회사', '🏢'], ['사람', '👻'], ['시간', '⏰'], ['보여', '👀']];
+    const IDLE_MS = 5000, STEP_MS = 2000, TYPE_MS = 120;
+    let idleTimer = null, timers = [], swapped = [];
+    const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+    const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+    const heroVisible = () => document.querySelector('.hero').getBoundingClientRect().bottom > 300;
+    // 글자 요소 배열에서 단어(연속 글자)를 찾아 요소 묶음으로. 원래 글자(dataset.ch)로 비교 — 이미 이모지(서로게이트 2글자)로 바뀐 요소가 있어도 어긋나지 않게
+    const findWord = (word) => {
+      const letters = Array.from(word);
+      for (let i = 0; i + letters.length <= heroChars.length; i++) {
+        if (letters.every((ch, k) => heroChars[i + k].dataset.ch === ch)) return heroChars.slice(i, i + letters.length);
+      }
+      return null;
+    };
+    // 한 단어를 즉시 원문으로 (SplitText 가 글자에 준 inline-block 은 되살려야 한다 — 지우면 div 라 글자마다 줄바꿈)
+    const putBack = (entry) => {
+      entry.els.forEach((c, i) => { gsap.killTweensOf(c); c.style.display = entry.display[i]; c.style.width = ''; c.style.textAlign = ''; c.style.opacity = ''; c.textContent = c.dataset.ch; gsap.set(c, { clearProps: 'transform,width,opacity' }); });
+    };
+    const finish = (entry) => { putBack(entry); swapped = swapped.filter((e) => e !== entry); };
+    // 마우스가 움직이면 : 진행 중이던 사이클은 멈추고, 남은 이모지를 앞 단어부터 순서대로 하나씩 타이핑해 원문으로 되돌린다 (타이핑 중이던 단어는 바로 완성)
+    let restoring = false;
+    const typeBackAll = () => {
+      clearTimers();
+      swapped.filter((e) => e.typing).forEach(finish);
+      const pending = swapped.slice().sort((a, b) => heroChars.indexOf(a.els[0]) - heroChars.indexOf(b.els[0]));
+      if (!pending.length) return;
+      restoring = true;
+      let at = 0;
+      pending.forEach((entry) => { later(() => toText(entry), at); at += 180 + TYPE_MS * typingSteps(entry.word).length + 120; });
+      later(() => { restoring = false; }, at);
+    };
+    heroEmojiReset = () => { clearTimers(); swapped = []; };
+    // 단어 → 이모지 (두 글자 폭에서 이모지 폭으로 줄며 팝)
+    const toEmoji = (word, emoji) => {
+      const els = findWord(word);
+      if (!els) return;
+      const width = els.reduce((sum, c) => sum + c.getBoundingClientRect().width, 0);
+      const first = els[0];
+      const entry = { word, els, text: first.textContent, display: els.map((c) => c.style.display) };
+      swapped.push(entry);
+      els.slice(1).forEach((c) => { c.style.display = 'none'; });
+      first.style.display = 'inline-block'; first.style.textAlign = 'center';
+      first.textContent = emoji;
+      const natural = first.getBoundingClientRect().width;
+      gsap.fromTo(first, { width, scale: 0.4, rotation: -15 }, { width: natural, scale: 1, rotation: 0, duration: 0.55, ease: 'back.out(1.6)' });
+    };
+    // 이모지 → 단어 : 이모지가 작아져 사라진 뒤 한글 IME 로 치듯 자모 단위(TYPE_MS 간격)로 타이핑된다 (회사: ㅎ→호→회→횟→회사)
+    const toText = (entry) => {
+      const first = entry.els[0];
+      const steps = typingSteps(entry.word);
+      entry.typing = true;
+      const render = (text) => {
+        const chars = Array.from(text);
+        entry.els.forEach((c, i) => { if (i < chars.length) { c.style.display = entry.display[i]; c.textContent = chars[i]; } else c.style.display = 'none'; });
+      };
+      gsap.to(first, { scale: 0, duration: 0.18, ease: 'power2.in', onComplete: () => {
+        first.style.width = ''; first.style.textAlign = '';
+        gsap.set(first, { clearProps: 'transform,width' });
+        steps.forEach((text, k) => later(() => render(text), TYPE_MS * k));
+        later(() => { render(entry.word); swapped = swapped.filter((e) => e !== entry); }, TYPE_MS * steps.length);
+      } });
+    };
+    // 사이클 : 이모지 넷을 2초 간격으로 → 2초 쉬고 → 랜덤 순서로 2초 간격 타이핑 복귀 → 2초 쉬고 → 반복
+    const cycle = () => {
+      if (!heroVisible()) return;
+      const order = gsap.utils.shuffle(WORDS.slice());
+      order.forEach(([word, emoji], i) => later(() => heroVisible() && toEmoji(word, emoji), STEP_MS * i));
+      const back = STEP_MS * order.length + STEP_MS;
+      const backOrder = gsap.utils.shuffle(WORDS.map(([w]) => w));
+      backOrder.forEach((word, i) => later(() => { const entry = swapped.find((e) => e.word === word); if (entry && heroVisible()) toText(entry); }, back + STEP_MS * i));
+      later(cycle, back + STEP_MS * backOrder.length + STEP_MS);
+    };
+    const arm = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (heroVisible() && heroChars.length) cycle(); }, IDLE_MS); };
+    const activity = () => { if (!restoring && (swapped.length || timers.length)) typeBackAll(); arm(); };
+    ['mousemove', 'mousedown', 'wheel'].forEach((ev) => window.addEventListener(ev, activity, { passive: true }));
+    arm();
+  }
+
+  /* ---------- 우측 상단 고정 Early Access 버튼 문구 루프 : 노출 10초 후 「지금 무료」 가 타이핑되고, 2초 뒤 「Early Access」 가 한 글자씩 타이핑돼 돌아온다. 이후 10초마다 반복. 버튼이 숨겨지면 멈추고 원문으로 ---------- */
+  if (fixedCta && !MOBILE) {
+    const LABEL = 'Early Access', ALT = '지금 무료', ZW = '\u200b';   // 빈 문자열이면 줄 높이가 사라져 버튼이 납작해지므로 폭 0 문자로 유지
+    const CTA_GAP = 10000, CTA_HOLD = 2000, KO_MS = 90, EN_MS = 60;
+    let ctaTimers = [], ctaHidden = null;
+    const ctaLater = (fn, ms) => ctaTimers.push(setTimeout(fn, ms));
+    const ctaClear = () => { ctaTimers.forEach(clearTimeout); ctaTimers = []; };
+    // 문구를 바꾸고, 버튼 폭(hug)을 이전 폭에서 새 문구의 자연 폭으로 부드럽게 트윈 → 글자가 지워지며 줄었다가 타이핑되며 다시 커지는 모션
+    const setLabel = (text) => {
+      const prev = fixedCta.getBoundingClientRect().width;
+      fixedCta.style.width = 'auto'; fixedCta.textContent = text;
+      const next = fixedCta.offsetWidth;
+      gsap.fromTo(fixedCta, { width: prev }, { width: next, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+    };
+    const typeInto = (steps, ms) => { steps.forEach((t, i) => ctaLater(() => setLabel(t), ms * i)); return ms * steps.length; };
+    const run = () => {
+      setLabel(ZW);
+      const ko = typeInto(typingSteps(ALT), KO_MS);
+      const enSteps = Array.from(LABEL).map((_, i) => LABEL.slice(0, i + 1));
+      ctaLater(() => { setLabel(ZW); typeInto(enSteps, EN_MS); }, ko + CTA_HOLD);
+      const done = ko + CTA_HOLD + EN_MS * (enSteps.length + 1);
+      ctaLater(() => gsap.set(fixedCta, { clearProps: 'width' }), done + 300);          // 원문으로 돌아오면 인라인 폭을 지워 다시 hug
+      ctaLater(run, done + CTA_GAP);
+    };
+    const sync = () => {
+      const hidden = fixedCta.classList.contains('is-hidden');
+      if (hidden === ctaHidden) return;
+      ctaHidden = hidden;
+      ctaClear(); gsap.killTweensOf(fixedCta, 'width'); fixedCta.textContent = LABEL; gsap.set(fixedCta, { clearProps: 'width' });
+      if (!hidden) ctaLater(run, CTA_GAP);
+    };
+    new MutationObserver(sync).observe(fixedCta, { attributes: true, attributeFilter: ['class'] });
+    sync();
   }
 
   /* ---------- Section 1 : 텍스트가 화면 가운데 오면 고정 → 스크롤에 따라 첫 줄부터 검정으로 → 모두 바뀌면 해제 ---------- */
