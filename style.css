@@ -571,7 +571,7 @@ html.is-locked { overflow: hidden; }
   .h3 { font-size: 20px; line-height: 1.41; }
 
   /* GNB 0.8955배 (Figma 30:1854: 335×70, 패딩 21.5/35.8, 로고 76×27, 메뉴 14.33), 우상단 고정 CTA 없음 */
-  .gnb { top: 14px; padding: 21.5px 35.8px; gap: 43px; }
+  .gnb { top: 14px; padding: 21.5px 35.8px; gap: 43px; transform-origin: 50% 0; } /* 스크롤 다운 축소(main.js, 70%)는 상단 중앙 기준 */
   .gnb__logo { width: 76.1px; height: 27px; }
   .gnb__nav { gap: 21.5px; }
   .gnb { white-space: nowrap; }

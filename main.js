@@ -169,9 +169,11 @@
   let gnbIntro = null;                                 // 첫 로딩 인트로 타임라인 (아래 Hero 블록에서 생성)
   // k = 0~1 세기. 눌렸다가(0.12s) 탄성으로 복귀(1.1s), 렌즈 굴절량도 같이 출렁. 타임라인을 돌려주므로 인트로에 끼워 넣을 수 있다
   // settle / ease 로 복귀 길이·잔여 반동을 조절 (인트로 착지는 더 길고 크게)
+  const mobileMq = window.matchMedia('(max-width: 834px)');   // 현재 레이아웃이 모바일인지 (GNB 축소·접힘 판단에 공용)
+  let gnbScaleBase = 1;                                // 기본 배율 (모바일 스크롤 다운 시 0.7) — 꿀렁임은 이 값을 기준으로 눌렸다 돌아온다
   const makeWobble = (k, settle = 1.1, ease = 'elastic.out(1.1, 0.32)') => gsap.timeline()
-    .to(gnb, { scaleX: 1 + 0.045 * k, scaleY: 1 - 0.11 * k, duration: 0.12, ease: 'power2.out' }, 0)
-    .to(gnb, { scaleX: 1, scaleY: 1, duration: settle, ease }, 0.12)
+    .to(gnb, { scaleX: () => gnbScaleBase * (1 + 0.045 * k), scaleY: () => gnbScaleBase * (1 - 0.11 * k), duration: 0.12, ease: 'power2.out' }, 0)
+    .to(gnb, { scaleX: () => gnbScaleBase, scaleY: () => gnbScaleBase, duration: settle, ease }, 0.12)
     .to(wobble, { amount: Math.max(0, 1 - 0.5 * k), duration: 0.12, ease: 'power2.out',
       onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0)
     .to(wobble, { amount: 1, duration: settle, ease,
@@ -187,6 +189,23 @@
       wobbleTl = makeWobble(k);
     }
   });
+
+  /* ---------- 모바일 GNB 축소 : 아래로 스크롤하면 70% (기준점 상단 중앙, CSS transform-origin), 위로 스크롤하거나 맨 위 근처면 100% ---------- */
+  // 로드 시점의 MOBILE 상수가 아니라 현재 폭(mobileMq)으로 판단 — 좁은 창에서 열고 넓히면 데스크톱에서도 줄어들던 문제 방지
+  const applyGnbScale = (want) => {
+    if (want === gnbScaleBase) return;
+    gnbScaleBase = want;
+    gsap.to(gnb, { scaleX: want, scaleY: want, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+  };
+  ScrollTrigger.create({
+    start: 0, end: 'max',
+    onUpdate(self) {
+      if (!mobileMq.matches) { applyGnbScale(1); return; }
+      const y = self.scroll();
+      applyGnbScale(y <= 40 ? 1 : (self.direction === 1 ? 0.7 : (self.direction === -1 ? 1 : gnbScaleBase)));
+    }
+  });
+  mobileMq.addEventListener('change', () => { if (!mobileMq.matches) applyGnbScale(1); });
 
   /* ---------- 앵커 링크 : GSAP ScrollTo (pin 구간과 호환되는 스무스 스크롤) ---------- */
   document.querySelectorAll('a[href^="#"]').forEach((a) => {
@@ -238,7 +257,6 @@
   let gnbIntroDone = false, gnbHover = false;
   // 접힘은 데스크톱 레이아웃(835px+) + 마우스 환경에서만. 모바일 레이아웃/터치는 호버가 없으니 항상 펼친 상태
   const hoverMq = window.matchMedia('(hover: hover) and (pointer: fine)');
-  const mobileMq = window.matchMedia('(max-width: 834px)');
   const canCollapse = () => hoverMq.matches && !mobileMq.matches;
   const expandGnb = () => {
     gsap.killTweensOf([gnb, gnbNav]);
