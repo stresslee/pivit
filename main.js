@@ -258,7 +258,7 @@
       scrollTrigger: { trigger: s4, pin: '.s4__sticky', start: 'top top', end: '+=' + (SLIDE_SCROLL * s4Slides.length), scrub: 0.4, invalidateOnRefresh: true } // anticipatePin 제거: 섹션1 과 같은 조기 스냅 방지
     });
     /* 슬라이드 i 구간 = [i, i+1] (1 = SLIDE_SCROLL px)
-       0.00~0.12  이전 슬라이드 아웃 → 이 슬라이드 인 (문장만 보이는 상태)
+       0.00~0.12  이 슬라이드가 이전 슬라이드 위로 크로스페이드 인 (문장만 보이는 상태)
        0.12~0.36  ■ 한 문장 읽는 멈춤 (약 480px)
        0.36~0.52  문장 축소 + 타이틀 등장 (커버)
        0.52~0.60  ■ 커버 멈춤
@@ -270,6 +270,8 @@
       const headRO = new ResizeObserver((entries) => { entries.forEach((e) => e.target.closest('.s4__slide').style.setProperty('--s4-head-h', Math.ceil(e.contentRect.height) + 'px')); });
       s4Slides.forEach((slide) => headRO.observe(slide.querySelector('.s4__head')));
     }
+    // 슬라이드 표시 여부는 .is-active 클래스(CSS)가 아니라 타임라인 인라인 opacity 로만 결정한다 (클래스가 먼저 빠지며 생기는 깜빡임 방지)
+    s4Slides.forEach((slide, k) => gsap.set(slide, { opacity: k === 0 ? 1 : 0 }));
     s4Slides.forEach((slide, i) => {
       const t0 = i;
       const head = slide.querySelector('.s4__head');
@@ -279,8 +281,9 @@
       const more = slide.querySelector('.s4__more');
       const cap = slide.querySelector('.s4__caption');
       if (i > 0) {
-        tl.to(s4Slides[i - 1], { opacity: 0, duration: 0.05, ease: 'none' }, t0);
-        tl.fromTo(slide, { opacity: 0 }, { opacity: 1, duration: 0.07, ease: 'none' }, t0 + 0.05);
+        // 이전 슬라이드를 먼저 0 으로 빼면 둘 다 투명한 순간 카드 흰 배경이 비쳐 깜빡인다 → 이전 슬라이드는 그대로 두고 새 슬라이드(DOM 상 위)를 위에 페이드 인한 뒤, 완전히 덮인 다음에야 이전 슬라이드를 끈다
+        tl.fromTo(slide, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, t0);
+        tl.set(s4Slides[i - 1], { opacity: 0 }, t0 + 0.12);
       }
       // --hy / --m 은 단위 없는 값. CSS 에서 반응형 스케일(--u)을 곱해 실제 px 로 쓴다
       gsap.set(head, { '--hy': 374 });

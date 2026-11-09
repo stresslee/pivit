@@ -245,7 +245,7 @@ html:not(.no-js) .bg-defer:not(.is-near) { background-image: none !important; }
 .s2__visual > img:first-child { width: 100%; height: 100%; object-fit: cover; }
 .s2__visual--target { position: relative; }
 /* 과녁 아이콘은 Figma 에서 export 프레임 밖(카드 프레임)에 있어 별도 오버레이 (Union 28:16326) */
-.s2__target { position: absolute; left: 50%; top: 50%; width: calc(174 * var(--u)); height: calc(136 * var(--u)); transform: translate(-50%, -50%); object-fit: contain; }
+.s2__target { position: absolute; left: 55%; top: 50%; /* 화살 꼬리 때문에 과녁이 왼쪽으로 치우쳐 보여 카드 폭의 5% 오른쪽으로 (사용자 요청) */ width: calc(174 * var(--u)); height: calc(136 * var(--u)); transform: translate(-50%, -50%); object-fit: contain; }
 .s2__text { display: flex; flex-direction: column; gap: 24px; padding: 0 32px 20px 0; }
 
 /* ---------- Logos marquee ---------- */
