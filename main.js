@@ -16,7 +16,6 @@
   const MOBILE = window.matchMedia('(max-width: 834px)').matches;   // 모바일 분기 (CSS 브레이크포인트 834 와 동일)
   const shift = new URLSearchParams(location.search).get('shift');
   if (shift) document.body.style.marginTop = (-parseInt(shift, 10)) + 'px';
-  if (location.search.includes('gnbdark')) document.getElementById('gnb').classList.add('is-dark');
 
   /* ---------- 고정 Early Access 버튼 : 콘텐츠 안 버튼이 보일 때는 숨김 ---------- */
   // 콘텐츠 안 Early Access 버튼(히어로·푸터)이 20% 이상 보이거나, 푸터가 화면에 들어오면 끝까지 숨김
@@ -152,16 +151,11 @@
 
   if (reduce || review || !window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+  if (window.SplitText) gsap.registerPlugin(SplitText);
   const EASE = 'power3.out';
 
-  /* ---------- GNB : 비디오 섹션이 화면 상단에 닿으면 다크 글래스로 ---------- */
+  /* ---------- GNB : 처음부터 다크 글래스 (HTML 에 is-dark). 라이트 전환 없음 ---------- */
   const gnb = document.getElementById('gnb');
-  // 비디오 섹션 상단을 지나면 다크, 다시 위로 올라올 때만 라이트. 페이지 끝(end)에서는 바뀌지 않음
-  ScrollTrigger.create({
-    trigger: '#video', start: 'top top',
-    onEnter: () => gnb.classList.add('is-dark'),
-    onLeaveBack: () => gnb.classList.remove('is-dark')
-  });
 
   /* ---------- GNB 글래스 렌즈 (glisse) : spread 필드 · Bend 1.0 · Dispersion 1.05 · Rim 0.61 ---------- */
   const glass = window.PivitGlass ? PivitGlass.mountField(gnb, { bend: 1.0, dispersion: 1.05, rim: 0.61, blur: 0.6 }) : null;
@@ -172,20 +166,25 @@
   /* ---------- GNB 꿀렁임 : 스크롤 속도에 따라 눌렸다가 탄성으로 복귀, 렌즈 굴절도 같이 출렁 ---------- */
   const wobble = { amount: 1 };
   let wobbleTl = null;
+  let gnbIntro = null;                                 // 첫 로딩 인트로 타임라인 (아래 Hero 블록에서 생성)
+  // k = 0~1 세기. 눌렸다가(0.12s) 탄성으로 복귀(1.1s), 렌즈 굴절량도 같이 출렁. 타임라인을 돌려주므로 인트로에 끼워 넣을 수 있다
+  // settle / ease 로 복귀 길이·잔여 반동을 조절 (인트로 착지는 더 길고 크게)
+  const makeWobble = (k, settle = 1.1, ease = 'elastic.out(1.1, 0.32)') => gsap.timeline()
+    .to(gnb, { scaleX: 1 + 0.045 * k, scaleY: 1 - 0.11 * k, duration: 0.12, ease: 'power2.out' }, 0)
+    .to(gnb, { scaleX: 1, scaleY: 1, duration: settle, ease }, 0.12)
+    .to(wobble, { amount: Math.max(0, 1 - 0.5 * k), duration: 0.12, ease: 'power2.out',
+      onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0)
+    .to(wobble, { amount: 1, duration: settle, ease,
+      onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0.12);
   ScrollTrigger.create({
     start: 0, end: 'max',
     onUpdate(self) {
       const v = Math.abs(self.getVelocity());          // px/s
       if (v < 250) return;
-      const k = Math.min(1, v / 3000);                 // 0~1 세기
+      if (gnbIntro && gnbIntro.isActive()) return;     // 인트로 중에는 스크롤 꿀렁임 생략
+      const k = Math.min(1, v / 3000);
       if (wobbleTl && wobbleTl.isActive() && wobbleTl.progress() < 0.25) return;
-      wobbleTl = gsap.timeline()
-        .to(gnb, { scaleX: 1 + 0.045 * k, scaleY: 1 - 0.11 * k, duration: 0.12, ease: 'power2.out' }, 0)
-        .to(gnb, { scaleX: 1, scaleY: 1, duration: 1.1, ease: 'elastic.out(1.1, 0.32)' }, 0.12)
-        .to(wobble, { amount: 1 - 0.5 * k, duration: 0.12, ease: 'power2.out',
-          onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0)
-        .to(wobble, { amount: 1, duration: 1.1, ease: 'elastic.out(1.1, 0.32)',
-          onUpdate: () => glass && glass.setAmount(wobble.amount) }, 0.12);
+      wobbleTl = makeWobble(k);
     }
   });
 
@@ -204,13 +203,76 @@
     });
   });
 
-  /* ---------- Hero : 진입 시 순차 등장 ---------- */
-  gsap.fromTo('.hero__content > *',
-    { y: 28, opacity: 0 },
-    { y: 0, opacity: 1, duration: 1, ease: EASE, stagger: 0.14, delay: 0.1 });
+  /* ---------- Hero : 진입 시 순차 등장 (타이틀은 아래 .split-lines 글자 애니메이션이 같은 순서 슬롯(두 번째, 0.24s)에서 담당) ---------- */
+  const HERO_STAGGER = 0.14, HERO_DELAY = 0.1;
+  // 히어로 타이틀 글자 애니메이션은 다른 섹션(0.8s / 8ms)의 2배 길이. 타이틀 뒤 항목들은 그 늘어난 만큼(HERO_TITLE_EXTRA) 늦게 시작
+  const HERO_TITLE_DUR = 1.6, HERO_TITLE_STAGGER = 0.016, HERO_TITLE_EXTRA = 0.5;   // 타이틀이 거의 다 보일 즈음 아래 텍스트가 이어지도록 0.5
+  const heroItems = Array.from(document.querySelectorAll('.hero__content > *'));
+  const heroTitleIndex = heroItems.findIndex((el) => el.classList.contains('split-lines'));
+  const heroDelay = (i) => HERO_DELAY + HERO_STAGGER * i + (heroTitleIndex >= 0 && i > heroTitleIndex ? HERO_TITLE_EXTRA : 0);
+  heroItems.forEach((el, i) => {
+    if (el.classList.contains('split-lines')) return;
+    gsap.fromTo(el, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: EASE, delay: heroDelay(i) });
+  });
+  /* GNB 인트로 : 히어로 마지막 항목이 거의 다 나타난 시점에, 로고만 있는 작은 알약이 화면 위에서 떨어져 살짝 반동하며 착지(착지 순간 꿀렁임) → 메뉴 폭으로 펼쳐지며 메뉴가 나타난다
+     (CSS .gnb--intro 가 그 전까지 위에 숨겨 둠. 폭은 펼침 직전에 실측해 폰트 로딩 전후 차이를 피하고, 끝나면 인라인 폭을 지워 auto 로) */
+  const heroEnd = heroDelay(Math.max(0, heroItems.length - 1)) + 1;
+  const gnbNav = gnb.querySelector('.gnb__nav');
+  const gnbLogo = gnb.querySelector('.gnb__logo');
+  const compactWidth = () => { const cs = getComputedStyle(gnb); return gnbLogo.offsetWidth + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight); };
+  let fullWidth = 0;
+  gsap.set(gnb, { y: -(gnb.offsetHeight + 80), width: compactWidth() });
+  gsap.set(gnbNav, { opacity: 0 });
+  gnb.classList.remove('gnb--intro');
+  // 현재 인라인 폭을 잠시 풀고 메뉴까지 포함한 자연 폭을 잰다 (동기 처리라 화면에 그려지지 않음)
+  const measureFull = () => { const prev = gnb.style.width; gnb.style.width = 'auto'; const w = gnb.offsetWidth; gnb.style.width = prev; return w; };
+  gnbIntro = gsap.timeline({ delay: heroEnd - 0.3 })
+    .to(gnb, { y: 0, duration: 0.5, ease: 'back.out(1.3)' }, 0)              // 빠르게 떨어져 작은 반동으로 착지 (제자리에 처음 닿는 시점 ≈ 0.22s)
+    .add(makeWobble(0.8), 0.22)                                                // 닿는 순간부터 꿀렁임 : 스크롤 때와 같은 세기·복귀(1.1s) (+ 렌즈 굴절 출렁)
+    .call(() => { fullWidth = measureFull(); }, null, 0.54)
+    .to(gnb, { width: () => fullWidth, duration: 0.8, ease: 'power3.inOut' }, 0.55)
+    .to(gnbNav, { opacity: 1, duration: 0.45, ease: 'power2.out' }, 1.0)
+    .call(() => { gnbIntroDone = true; gsap.delayedCall(2, () => { if (!gnbHover) collapseGnb(); }); }, null, 1.45); // 펼쳐진 뒤 2초 후 로고만 남기고 접힘
+
+  /* GNB 접힘/펼침 : 인트로 후 로고만 보이는 알약으로 접혀 있다가, 마우스를 올리면(또는 키보드 포커스) 메뉴 폭으로 펼쳐진다. hover 가 없는 터치 기기에서는 항상 펼친 상태 */
+  let gnbIntroDone = false, gnbHover = false;
+  // 접힘은 데스크톱 레이아웃(835px+) + 마우스 환경에서만. 모바일 레이아웃/터치는 호버가 없으니 항상 펼친 상태
+  const hoverMq = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const mobileMq = window.matchMedia('(max-width: 834px)');
+  const canCollapse = () => hoverMq.matches && !mobileMq.matches;
+  const expandGnb = () => {
+    gsap.killTweensOf([gnb, gnbNav]);
+    gnbNav.style.pointerEvents = '';
+    gsap.to(gnb, { width: measureFull(), duration: 0.55, ease: 'power3.out', onComplete: () => gsap.set(gnb, { clearProps: 'width' }) });
+    gsap.to(gnbNav, { opacity: 1, duration: 0.3, ease: 'power2.out', delay: 0.12 });
+  };
+  const collapseGnb = () => {
+    if (!canCollapse()) return;
+    gsap.killTweensOf([gnb, gnbNav]);
+    gnbNav.style.pointerEvents = 'none';                                       // 접힌 동안 알약 밖으로 넘친(투명) 메뉴가 hover 영역이 되지 않게
+    gsap.to(gnbNav, { opacity: 0, duration: 0.2, ease: 'power2.in' });
+    gsap.to(gnb, { width: compactWidth(), duration: 0.55, ease: 'power3.inOut' });
+  };
+  gnb.addEventListener('mouseenter', () => { gnbHover = true; if (gnbIntroDone && canCollapse()) expandGnb(); });
+  gnb.addEventListener('mouseleave', () => { gnbHover = false; if (gnbIntroDone) collapseGnb(); });
+  gnb.addEventListener('focusin', () => { if (gnbIntroDone && canCollapse()) expandGnb(); });
+  gnb.addEventListener('focusout', (e) => { if (gnbIntroDone && !gnb.contains(e.relatedTarget) && !gnbHover) collapseGnb(); });
+  // 창 크기/입력 환경이 바뀌면 상태 맞추기: 모바일 폭으로 줄면 펼치고, 데스크톱으로 돌아오면 (호버 중이 아닐 때) 접는다
+  const syncGnbCollapse = () => { if (!gnbIntroDone) return; if (canCollapse()) { if (!gnbHover) collapseGnb(); } else expandGnb(); };
+  mobileMq.addEventListener('change', syncGnbCollapse);
+  hoverMq.addEventListener('change', syncGnbCollapse);
 
   /* ---------- 공통 reveal : 섹션 헤더/비주얼/컬럼 ---------- */
   gsap.utils.toArray('.reveal').forEach((el) => {
+    // 안에 글자 스플릿 타이틀(.split-lines)이 있는 헤드는 컨테이너를 페이드하지 않고(타이틀은 자체 애니메이션) 나머지 자식(부제 등)만 페이드
+    if (el.querySelector('.split-lines')) {
+      gsap.set(el, { opacity: 1 });
+      const rest = Array.from(el.children).filter((c) => !c.classList.contains('split-lines'));
+      if (rest.length) gsap.fromTo(rest,
+        { y: 36, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.9, ease: EASE, scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' } });
+      return;
+    }
     const cols = el.classList.contains('feat__cols') ? el.querySelectorAll('.feat__col') : null;
     if (cols && cols.length) {
       gsap.set(el, { opacity: 1 });
@@ -226,6 +288,29 @@
       { y: 0, opacity: 1, scale: 1, duration: isFigure ? 1.1 : 0.9, ease: EASE,
         scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' } });
   });
+
+  /* ---------- 섹션 타이틀(.split-lines: 섹션 2·3·6~10) : 줄 마스크 + 글자 단위 슬라이드 업 (카드 헤드라인은 적용 안 함 — 사용자 지시) (GSAP 'Responsive line splits on scroll' 데모 방식, SplitText 3.13 autoSplit 으로 리사이즈 시 재분할) ---------- */
+  if (window.SplitText) {
+    gsap.utils.toArray('.split-lines').forEach((el) => {
+      // 히어로 타이틀은 첫 화면이라 스크롤 트리거 대신 진입 시퀀스의 두 번째 슬롯 시점에 재생
+      const inHero = el.closest('.hero__content');
+      const heroIndex = inHero ? Array.prototype.indexOf.call(inHero.children, el) : -1;
+      SplitText.create(el, {
+        type: 'lines,chars', mask: 'lines', autoSplit: true,
+        // 줄 마스크는 유지하고 글자 하나하나가 아주 짧은 간격(8ms)으로 올라온다
+        onSplit: (self) => {
+          gsap.set(el, { opacity: 1 });   // 히어로 CSS(.hero__content > * { opacity: 0 }) 해제 — 분할된 뒤에만 보이게 해 깜빡임 방지
+          return gsap.from(self.chars, {
+            yPercent: 100, opacity: 0, ease: 'expo.out',
+            duration: inHero ? HERO_TITLE_DUR : 0.8, stagger: inHero ? HERO_TITLE_STAGGER : 0.008,
+            ...(inHero
+              ? { delay: HERO_DELAY + HERO_STAGGER * heroIndex }
+              : { scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' } })
+          });
+        }
+      });
+    });
+  }
 
   /* ---------- Section 1 : 텍스트가 화면 가운데 오면 고정 → 스크롤에 따라 첫 줄부터 검정으로 → 모두 바뀌면 해제 ---------- */
   const s1Lines = gsap.utils.toArray('.s1__line');
@@ -272,6 +357,7 @@
     }
     // 슬라이드 표시 여부는 .is-active 클래스(CSS)가 아니라 타임라인 인라인 opacity 로만 결정한다 (클래스가 먼저 빠지며 생기는 깜빡임 방지)
     s4Slides.forEach((slide, k) => gsap.set(slide, { opacity: k === 0 ? 1 : 0 }));
+    const s4TitleSplits = [];                                 // 타이틀 글자 분할 (모바일 전환 시 revert)
     s4Slides.forEach((slide, i) => {
       const t0 = i;
       const head = slide.querySelector('.s4__head');
@@ -290,7 +376,15 @@
       gsap.set(eyebrow, { '--m': 1 });
       tl.to(eyebrow, { '--m': 0, fontWeight: 500, lineHeight: 1.63, letterSpacing: '-0.48px', duration: 0.16, ease: 'power2.inOut' }, t0 + 0.36);
       tl.fromTo(head, { '--hy': 374 }, { '--hy': 271, duration: 0.16, ease: 'power2.inOut' }, t0 + 0.36);
-      tl.fromTo(title, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.14, ease: 'power2.out' }, t0 + 0.42);
+      if (window.SplitText) {
+        // 다른 섹션 타이틀처럼 줄 마스크 + 글자 단위 슬라이드 업. 스크럽 타임라인이라 duration/stagger 는 스크롤 거리(1 = SLIDE_SCROLL px) 단위
+        const split = SplitText.create(title, { type: 'lines,chars', mask: 'lines' });
+        s4TitleSplits.push(split);
+        gsap.set(title, { opacity: 1 });
+        tl.from(split.chars, { yPercent: 100, opacity: 0, duration: 0.12, ease: 'power2.out', stagger: 0.004 }, t0 + 0.42);
+      } else {
+        tl.fromTo(title, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.14, ease: 'power2.out' }, t0 + 0.42);
+      }
       tl.fromTo(head, { '--hy': 271 }, { '--hy': 37, duration: 0.12, ease: 'power2.inOut', immediateRender: false }, t0 + 0.6);
       tl.fromTo(mock, { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.2, ease: 'power2.out' }, t0 + 0.68);
       if (cap) tl.to(cap, { opacity: 1, duration: 0.08, ease: 'none' }, t0 + 0.74);
@@ -305,6 +399,7 @@
     // 데스크톱→모바일(834 이하)로 창이 줄면 GSAP 이 컨텍스트를 되돌리는데, .to() 트윈은 시작값(데스크톱 CSS opacity 0)을 인라인으로 남긴다
     // → 캡션/자세히 버튼이 모바일에서 안 보임. 되돌릴 때 인라인 스타일을 지워 CSS 정적 레이아웃만 남긴다 (슬라이드의 --bg 인라인은 유지)
     return () => {
+      s4TitleSplits.forEach((sp) => sp.revert());
       gsap.set(s4Slides, { clearProps: 'opacity' });
       gsap.set(s4.querySelectorAll('.s4__head, .s4__eyebrow, .s4__title, .s4__mock, .s4__more, .s4__caption'), { clearProps: 'all' });
     };
@@ -312,6 +407,7 @@
 
     /* 상세 모달 */
     const modal = document.getElementById('s4-modal');
+    const backdrop = document.getElementById('s4-backdrop');
     const bodies = modal ? Array.from(modal.querySelectorAll('.s4__modal-body')) : [];
     // 모달이 열린 동안 페이지 스크롤 잠금 (스크롤은 모달 안에서만), 바깥 클릭/ESC/X 로 닫힘 (0.2s)
     let lockedY = 0;
@@ -324,13 +420,15 @@
       (modal.querySelector('.s4__modal-scroll') || modal).scrollTop = 0;
       modal.classList.add('is-open'); modal.setAttribute('aria-hidden', 'false');
       lockPage();
-      gsap.fromTo(modal, { x: 40, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.45, ease: 'power3.out' });
+      gsap.fromTo(modal, { y: 24, scale: 0.98, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, duration: 0.45, ease: 'power3.out' });
+      if (backdrop) gsap.fromTo(backdrop, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power2.out' });
     };
     const closeModal = () => {
       if (!modal.classList.contains('is-open')) return;
       modal.classList.remove('is-open'); modal.setAttribute('aria-hidden', 'true');
       unlockPage();
-      gsap.to(modal, { x: 40, autoAlpha: 0, duration: 0.2, ease: 'power2.in' });
+      gsap.to(modal, { y: 16, scale: 0.98, autoAlpha: 0, duration: 0.2, ease: 'power2.in' });
+      if (backdrop) gsap.to(backdrop, { autoAlpha: 0, duration: 0.2, ease: 'power2.in' });
     };
     document.querySelectorAll('.s4__more').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); openModal(btn.dataset.modal); }));
     if (modal) {

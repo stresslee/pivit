@@ -27,14 +27,14 @@
   <link rel="icon" href="assets/logo-symbol.svg" type="image/svg+xml" />
   <link rel="preload" as="image" href="assets/hero-bg.webp" fetchpriority="high" /> <!-- 첫 화면 배경을 가장 먼저 -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="tokens.css?v=20261112e" />
-  <link rel="stylesheet" href="tokens-dark.css?v=20261112e" />
-  <link rel="stylesheet" href="style.css?v=20261112e" />
+  <link rel="stylesheet" href="tokens.css?v=20261113a" />
+  <link rel="stylesheet" href="tokens-dark.css?v=20261113a" />
+  <link rel="stylesheet" href="style.css?v=20261113a" />
 </head>
 <body>
 
 <!-- ===== GNB ===== -->
-<header class="gnb" id="gnb">
+<header class="gnb is-dark gnb--intro" id="gnb">
   <a class="gnb__logo" href="#top" aria-label="pivit 홈">
     <img class="gnb__symbol" src="assets/logo-symbol.svg" alt="" />
     <img class="gnb__lettermark" src="assets/logo-lettermark.svg" alt="pivit" />
@@ -55,7 +55,7 @@
 <section class="hero">
   <div class="hero__content">
     <p class="hero__eyebrow">대표를 위한 조직 운영 체제</p>
-    <h1 class="hero__title">우리 회사의 사람과 시간,<br />한눈에 보여요</h1>
+    <h1 class="hero__title split-lines">우리 회사의 사람과 시간,<br />한눈에 보여요</h1>
     <div class="hero__desc">
       <p>누가 어떤 일을 하는지, 새 일을 맡길 사람이 있는지, 그 일이 목표로 이어지는지. 보고서 없이 팀이 남긴 기록만으로 알 수 있어요.</p>
       <p class="hero__note">얼리 액세스 동안 무료, 정식 출시 후에도 3개월 더 무료예요</p>
@@ -87,9 +87,9 @@
 </section>
 
 <!-- ===== Section 2 : 세 가지 질문 ===== -->
-<section class="s2 wrap reveal" id="s2">
-  <h2 class="h1">그래서 대표님이 알고 싶은<br />인원과 비용 다음 세가지는</h2>
-  <div class="s2__grid">
+<section class="s2 wrap" id="s2">
+  <h2 class="h1 split-lines">그래서 대표님이 알고 싶은<br />인원과 비용 다음 세가지는</h2>
+  <div class="s2__grid reveal">
     <article class="s2__card">
       <div class="s2__visual"><img src="assets/s2-card1@2x.webp" width="409" height="341" alt="" loading="lazy" decoding="async" /></div>
       <div class="s2__text">
@@ -125,7 +125,7 @@
 <!-- ===== Section 3 : 작동방식 ===== -->
 <section class="s3" id="how">
   <div class="s3__sticky wrap">
-    <h2 class="h1 reveal">기록하면 모이고, 보이고,<br /> 대화로 이어져요.</h2>
+    <h2 class="h1 split-lines">기록하면 모이고, 보이고,<br /> 대화로 이어져요.</h2>
     <!-- 모바일 전용 탭 (Figma 30:1891) — 데스크톱은 좌측 스텝 목록 -->
     <div class="s3__tabs" role="tablist" aria-label="작동방식">
       <button class="s3__tab is-active" type="button" role="tab" data-step="0" aria-selected="true">기록</button>
@@ -257,7 +257,7 @@
 <!-- ===== Section 6 : 1on1 ===== -->
 <section class="feat feat--s6 wrap" id="features">
   <div class="feat__head reveal">
-    <h2 class="h1">1on1<br />숫자로 시작해 액션 아이템으로 끝나요</h2>
+    <h2 class="h1 split-lines">1on1<br />숫자로 시작해 액션 아이템으로 끝나요</h2>
     <p class="body feat__sub">실제 진척과 자가평가가 얼마나 다른지 보면서,<br />AI가 준비한 7단계 스크립트대로 진행해요.</p>
   </div>
   <div class="feat__body">
@@ -292,7 +292,7 @@
 <!-- ===== Section 7 : AI 피드백 ===== -->
 <section class="feat feat--s7 wrap" id="s7">
   <div class="feat__head feat__head--s7 reveal">
-    <h2 class="h1">AI 피드백<br />기억이 아니라 기록으로 피드백합니다</h2>
+    <h2 class="h1 split-lines">AI 피드백<br />기억이 아니라 기록으로 피드백합니다</h2>
     <p class="body feat__sub">스니핏 · OKR · 1on1 을 근거로<br />AI 가 초안을 만들고, 매니저가 고쳐 보냅니다.<br />받는 사람도 근거를 볼 수 있어 더 공정하다고 느낍니다.</p>
   </div>
   <div class="feat__body">
@@ -330,7 +330,7 @@
 <!-- ===== Section 8 : 데이터 출처 ===== -->
 <section class="feat feat--s8 wrap" id="s8">
   <div class="feat__head reveal">
-    <h2 class="h1">데이터는 어디서 오나<br />보고서를 따로 만들지 않습니다</h2>
+    <h2 class="h1 split-lines">데이터는 어디서 오나<br />보고서를 따로 만들지 않습니다</h2>
     <p class="body feat__sub">팀이 일하며 이미 남기는 기록이 그대로 근거가 됩니다.</p>
   </div>
   <div class="feat__body">
@@ -377,7 +377,7 @@
 <!-- ===== Section 9 : 데일리 스니핏 ===== -->
 <section class="feat feat--s9 wrap" id="s9">
   <div class="feat__head reveal">
-    <h2 class="h1">데일리 스니핏<br />버튼 한 번으로 그날 활동이 초안이 됩니다</h2>
+    <h2 class="h1 split-lines">데일리 스니핏<br />버튼 한 번으로 그날 활동이 초안이 됩니다</h2>
     <p class="body feat__sub">AI 가 채운 칸은 본인이 확인해야 제출되고,<br />컨디션은 본인이 적습니다.</p>
   </div>
   <div class="feat__body">
@@ -395,7 +395,7 @@
 <!-- ===== Section 10 : 결재/휴가 ===== -->
 <section class="feat feat--s10 wrap" id="s10">
   <div class="feat__head reveal">
-    <h2 class="h1">결재와 휴가도<br />같은 자리에서</h2>
+    <h2 class="h1 split-lines">결재와 휴가도<br />같은 자리에서</h2>
   </div>
   <div class="feat__body">
     <figure class="feat__figure reveal">
@@ -493,7 +493,8 @@
 
 </main>
 
-<!-- 섹션 4 상세 모달 (우측 고정 오버레이, Figma 15:8727) — GNB 위에 떠야 하므로 body 레벨 -->
+<!-- 섹션 4 상세 모달 (화면 중앙 오버레이 + 전체 블러 백드롭, Figma 15:8557 / 66:3348 / 15:8727) — GNB 위에 떠야 하므로 body 레벨 -->
+      <div class="s4__backdrop" id="s4-backdrop" aria-hidden="true"></div>
       <aside class="s4__modal" id="s4-modal" aria-hidden="true">
         <button class="s4__close" type="button" aria-label="닫기"><img src="assets/icon-x-close-lg.svg" width="33" height="33" alt="" loading="lazy" decoding="async" /></button>
         <div class="s4__modal-scroll">
@@ -576,10 +577,11 @@
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
-<script src="glass.js?v=20261112e"></script>
-<script src="main.js?v=20261112e"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollToPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script src="glass.js?v=20261113a"></script>
+<script src="main.js?v=20261113a"></script>
 </body>
 </html>

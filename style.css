@@ -131,6 +131,9 @@ details summary::-webkit-details-marker { display: none; }
   -webkit-backdrop-filter: blur(1.5px) saturate(1.5);
   backdrop-filter: blur(1.5px) var(--lg-filter, saturate(1.5));
 }
+/* 첫 로딩 인트로: 히어로 등장이 끝난 뒤 main.js 가 화면 위에서 탄성으로 떨어뜨린다. 그 전까지는 위에 숨김 (JS 가 같은 값을 인라인 transform 으로 잇고 클래스를 뗀다) */
+.gnb.gnb--intro { transform: translateY(calc(-100% - 80px)); }
+.no-js .gnb--intro, .review .gnb--intro { transform: none; }
 /* 굴절이 없는 브라우저(사파리 등, html.no-refract — glass.js): frost 1.5px 로는 뒤 글자가 그대로 읽혀 깨져 보이므로 진한 프로스트 글래스로 */
 .no-refract .gnb.is-dark {
   -webkit-backdrop-filter: blur(5px) saturate(1.5);
@@ -160,7 +163,7 @@ details summary::-webkit-details-marker { display: none; }
 }
 .gnb.is-dark::after { opacity: 0; }
 
-.gnb__logo { position: relative; width: 85px; height: 30px; display: block; }
+.gnb__logo { position: relative; width: 85px; height: 30px; display: block; flex: none; }
 .gnb__symbol { position: absolute; left: 0; top: 0; height: 100%; width: 32.49%; }
 .gnb__lettermark { position: absolute; left: 43.08%; top: 7.65%; width: 56.9%; height: 84.7%; }
 .gnb__symbol, .gnb__lettermark { transition: opacity .6s var(--ease); }
@@ -168,7 +171,7 @@ details summary::-webkit-details-marker { display: none; }
 .gnb.is-dark .gnb__symbol:not(.gnb__symbol--light), .gnb.is-dark .gnb__lettermark:not(.gnb__lettermark--light) { opacity: 0; }
 .gnb.is-dark .gnb__symbol--light, .gnb.is-dark .gnb__lettermark--light { opacity: 1; }
 
-.gnb__nav { display: flex; gap: 24px; }
+.gnb__nav { display: flex; gap: 24px; flex: none; white-space: nowrap; } /* flex:none — 인트로에서 GNB 폭을 로고만큼 줄여도 메뉴가 줄바꿈되지 않고 (투명 상태로) 옆으로 넘치게 */
 .gnb__nav a {
   font-size: 16px; font-weight: 600; line-height: 1.63; letter-spacing: -0.48px;
   color: var(--colors-text-textPrimary);
@@ -180,11 +183,13 @@ details summary::-webkit-details-marker { display: none; }
 
 /* ---------- Hero ---------- */
 .hero {
-  position: relative; height: calc(1024 * var(--u));
+  /* 높이·상단 패딩은 --u 로 줄이지 않는다(1024/220 고정): 타이틀·본문·버튼이 px 고정이라 창이 좁아지면 콘텐츠가 섹션 밖으로 넘쳤고,
+     배경이 함께 축소되면서 그림 속 인물(이미지 세로 73~87%)이 텍스트 뒤로 올라와 가려졌다. 높이를 고정하면 cover 배율이 max(1, 창폭/2008) 로 고정돼
+     인물이 항상 섹션 상단 750~890px 에 머물고, 콘텐츠(220~약 650)와 겹치지 않는다 */
+  position: relative; height: 1024px;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  padding: calc(220 * var(--u)) 0 0;
-  /* 히어로/비디오 배경은 Figma 에서 2008px 폭으로 이어 붙인 두 장. 둘 다 프레임 비율 그대로(2008:1024 / 2008:760) cover 하면 배율이 같아지고,
-     히어로는 아래쪽·비디오는 위쪽에 붙여 어떤 창 폭에서도 이음새가 맞는다 */
+  padding: 220px 0 0;
+  /* 히어로/비디오 배경은 Figma 에서 2008px 폭으로 이어 붙인 두 장. 히어로는 아래쪽·비디오는 위쪽에 붙이고 둘의 배율을 같게(max(1, 창폭/2008)) 맞춰 이음새가 맞는다 (.video__bg 참고) */
   background: url("assets/hero-bg.webp") center bottom / cover no-repeat;
   color: var(--colors-text-textPrimaryOnBrand);
   text-align: center;
@@ -192,7 +197,7 @@ details summary::-webkit-details-marker { display: none; }
 .hero__content { display: flex; flex-direction: column; align-items: center; gap: 32px; }
 .hero__eyebrow { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
 .hero__title { font-size: 62px; line-height: 1.33; font-weight: 700; }
-.hero__desc { width: calc(432 * var(--u)); display: flex; flex-direction: column; gap: 6px; }
+.hero__desc { width: 432px; display: flex; flex-direction: column; gap: 6px; } /* 본문이 px 고정이라 폭도 고정 (줄 수 유지) */
 .hero__desc p { font-size: 16px; font-weight: 500; line-height: 1.63; letter-spacing: -0.48px; }
 .hero__desc .hero__note { font-size: 12px; font-weight: 400; letter-spacing: -0.36px; color: var(--componentColors-alpha-alphaWhite60); }
 .hero__scroll { position: absolute; left: 50%; bottom: 25px; transform: translateX(-50%); animation: bob 2.2s ease-in-out infinite; }
@@ -204,7 +209,8 @@ details summary::-webkit-details-marker { display: none; }
 .video { position: relative; height: calc(760 * var(--u)); /* Figma 30:1051 — 영상 프레임(85+708)은 섹션 아래로 33px 넘친다 */ }
 .video__bg {
   position: absolute; left: 0; right: 0; top: 0; height: calc(760 * var(--u));
-  background: url("assets/video-bg.webp") center top / cover no-repeat;
+  /* 배율을 히어로(높이 1024 고정 → max(1, 창폭/2008))와 똑같이 맞춰 이음새 유지. 섹션이 760 보다 낮으면 이미지 아래쪽이 잘릴 뿐 */
+  background: url("assets/video-bg.webp") center top / max(2008px, 100%) auto no-repeat;
 }
 .video__bg::after {
   content: ""; position: absolute; inset: 0;
@@ -334,21 +340,25 @@ html:not(.no-js) .bg-defer:not(.is-near) { background-image: none !important; }
 .s4__more:hover { background: var(--componentColors-alpha-alphaWhite20); }
 .s4__caption + .s4__more, .s4__more--low { margin-top: 28px; } /* 캡션 뒤 버튼: head 기준 239 */
 /* GSAP 이 transform(y) 을 덮어쓰므로 translateX(-50%) 대신 left 로 중앙 정렬 (리사이즈 시에도 정확) */
-.s4__mock { --mock-top: calc(293 * var(--u)); position: absolute; left: calc(50% - 523.5 * var(--u)); top: max(var(--mock-top), calc(37 * var(--u) + var(--s4-head-h, 0px) + 24px - var(--mock-pad, 0px))); width: calc(1047 * var(--u)); height: auto; opacity: 0; } /* --s4-head-h 는 main.js 가 헤드 높이로 갱신 */
+.s4__mock { pointer-events: none; /* 목업 2 는 그림자 여백(85px) 이 포함된 이미지라 위쪽 투명 영역이 '자세히' 버튼을 덮어 클릭을 가로챘다 */ --mock-top: calc(293 * var(--u)); position: absolute; left: calc(50% - 523.5 * var(--u)); top: max(var(--mock-top), calc(37 * var(--u) + var(--s4-head-h, 0px) + 24px - var(--mock-pad, 0px))); width: calc(1047 * var(--u)); height: auto; opacity: 0; } /* --s4-head-h 는 main.js 가 헤드 높이로 갱신 */
 .s4__mock--2 { left: calc(50% - 629 * var(--u)); width: calc(1258 * var(--u)); --mock-top: calc(277 * var(--u)); --mock-pad: calc(85 * var(--u)); } /* Figma 16:9035 content_modal 렌더 바운드(그림자 포함) y 277, 1258×515 (카드 하단에 클립). 모달 본체는 그 85 아래(362)라 헤드 겹침 판정에서 85 를 뺀다 */
 .s4__mock--3 { --mock-top: calc(361 * var(--u)); }
 
-/* 상세 모달 (Figma 15:8727) — 뷰포트 고정, 높이는 vh 기준, 내용이 길면 내부 스크롤. GNB/고정 버튼보다 위 */
+/* 상세 모달 백드롭 (Figma 66:3348 은 150px, 사용자 요청으로 100px) — 화면 전체를 white 15% 틴트 + 블러로 덮는다. 모달과 함께 열고 닫힘(main.js autoAlpha) */
+.s4__backdrop {
+  position: fixed; inset: 0; z-index: 79;
+  background: color-mix(in srgb, var(--colors-base-white) 15%, transparent);
+  -webkit-backdrop-filter: blur(100px); backdrop-filter: blur(100px);
+  visibility: hidden; opacity: 0;
+}
+/* 상세 모달 (Figma 15:8727, 2026-11-10 수정: 우측 고정 → 화면 가운데) — 뷰포트 고정, 높이는 vh 기준, 내용이 길면 내부 스크롤. GNB/고정 버튼보다 위 */
 .s4__modal {
   position: fixed; z-index: 80;
   top: 16px; height: calc(100vh - 32px); width: 599px;
-  right: 16px;                                                  /* 우측 간격 = 상하 간격(16px) */
+  left: calc(50% - 599px / 2);                                  /* 가로 중앙 (GSAP 이 transform 을 쓰므로 translate 대신 left 로) */
   border-radius: 28px; overflow: hidden;
   background: linear-gradient(180deg, var(--colors-background-bgPrimary) 0%, var(--colors-background-bgPrimary) 33%, var(--colors-brand-100) 78%, var(--colors-brand-200) 100%);
-  opacity: 1; /* 피그마 수정: 모달 fill 불투명 100% */
-  -webkit-backdrop-filter: blur(11.55px); backdrop-filter: blur(11.55px);
-  box-shadow: 0 24px 120px 0 var(--componentColors-alpha-alphaBlack3);
-  visibility: hidden; transform: translateX(40px);
+  visibility: hidden; opacity: 0;
 }
 /* 내용 스크롤 영역: 패딩 70/48/48 (Figma), 내용이 길면 내부 스크롤 */
 .s4__modal-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 70px 42px 48px 48px; scrollbar-width: thin; scrollbar-color: var(--componentColors-alpha-alphaBlack40) transparent; }
@@ -525,6 +535,7 @@ html.is-locked { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal, .s4__card, .s4__title, .s5__card, .hero__content > * { opacity: 1 !important; transform: none !important; }
+  .gnb--intro { transform: none; }
   .s1__line { --t: 1; }
 }
 
@@ -637,7 +648,7 @@ html.is-locked { overflow: hidden; }
   .s4__mock-m--1 { left: 5.2%; top: 55.8%; width: 90.2%; border-radius: 5.9px; }
   .s4__mock-m--2 { left: 6.57%; top: 55.8%; width: 87.44%; border-radius: 4.5px; box-shadow: var(--web-shadow-modal-m); }
   .s4__mock-m--3 { left: 6.7%; top: 64.1%; width: 87.2%; border-radius: 4.6px; }
-  .s4__modal { width: calc(100vw - 32px); }
+  .s4__modal { width: calc(100vw - 32px); left: 16px; }
   .s4__modal-scroll { padding: 60px 18px 32px 24px; }
   .s4__modal-body { width: 100%; }
 
