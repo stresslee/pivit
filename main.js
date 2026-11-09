@@ -497,6 +497,25 @@
     sync();
   }
 
+  /* ---------- 진단 오버레이 (?dbg) : 실제 기기에서 타이틀 분할·스크롤 트리거 상태를 눈으로 확인하기 위한 임시 패널 ---------- */
+  if (location.search.includes('dbg')) {
+    const box = document.createElement('pre');
+    Object.assign(box.style, { position: 'fixed', left: '4px', bottom: '4px', zIndex: '999', margin: '0', padding: '6px 8px', font: '10px/1.3 monospace', color: '#0f0', background: 'rgba(0,0,0,.75)', maxWidth: '96vw', whiteSpace: 'pre-wrap', pointerEvents: 'none' });
+    document.body.appendChild(box);
+    const tick = () => {
+      const titles = gsap.utils.toArray('.split-lines').map((el, i) => {
+        const chars = [...el.querySelectorAll(':scope > div > div > div')];
+        const vis = chars.filter((c) => +getComputedStyle(c).opacity > 0.9).length;
+        const st = ScrollTrigger.getAll().find((t) => t.trigger === el);
+        const r = el.getBoundingClientRect();
+        return `T${i} top:${Math.round(r.top)} masks:${el.querySelectorAll(':scope > div').length} chars:${vis}/${chars.length} op:${getComputedStyle(el).opacity} ${st ? `st:${Math.round(st.start)}/${st.progress.toFixed(2)}` : 'st:none'}`;
+      });
+      box.textContent = [`${navigator.userAgent.match(/(CriOS|Version|Chrome|Safari)\/[\d.]+/g)?.join(' ') || ''} gsap:${gsap.version} split:${!!window.SplitText} reduce:${matchMedia('(prefers-reduced-motion: reduce)').matches} mob:${mobileMq.matches}`,
+        `scrollY:${Math.round(scrollY)} vh:${innerHeight} docH:${document.documentElement.scrollHeight} fonts:${document.fonts ? document.fonts.status : '?'}`, ...titles].join('\n');
+    };
+    setInterval(tick, 400); tick();
+  }
+
   /* ---------- Section 1 : 텍스트가 화면 가운데 오면 고정 → 스크롤에 따라 첫 줄부터 검정으로 → 모두 바뀌면 해제 ---------- */
   const s1Lines = gsap.utils.toArray('.s1__line');
   if (s1Lines.length) {
@@ -669,7 +688,12 @@
   gsap.from('.footer__msg > *', { y: 30, opacity: 0, duration: 1, ease: EASE, stagger: 0.12,
     scrollTrigger: { trigger: '.footer__msg', start: 'top 85%', toggleActions: 'play none none reverse' } });
 
-  window.addEventListener('load', () => ScrollTrigger.refresh());
+  /* 트리거는 문서 순서대로 만들어지지 않았다(타이틀·reveal 이 섹션 1·4 의 pin 보다 먼저 생성). refresh 는 생성 순서로 위치를 계산하므로
+     pin 이 늘리는 스크롤 길이(섹션 1 900px, 섹션 4 6000px)가 뒤쪽 트리거의 start 에 반영되지 않아 타이틀 모션이 화면에 들어오기 한참 전에 재생돼 버렸다
+     → 시작 위치 순으로 정렬한 뒤 다시 계산 (ScrollTrigger.sort) */
+  ScrollTrigger.sort();
+  ScrollTrigger.refresh();
+  window.addEventListener('load', () => { ScrollTrigger.sort(); ScrollTrigger.refresh(); });
   /* 창 크기 변경 보정: window resize 이벤트를 놓치는 경우(다른 탭에서 리사이즈, 디스플레이 이동 등)에도
      뷰포트 크기가 바뀌었으면 핀 레이아웃을 다시 계산한다 */
   let vw = innerWidth, vh = innerHeight, refreshTimer;
