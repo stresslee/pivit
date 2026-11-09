@@ -83,17 +83,35 @@ details summary::-webkit-details-marker { display: none; }
   /* 레이아웃(--vw = max(창폭, 900)) 오른쪽 끝 기준 43px. 창이 900 보다 좁으면 가로 스크롤(--sx)만큼 따라간다 */
   position: fixed; top: 28px; right: calc(var(--cw, 100vw) - var(--vw, 100vw) + var(--sx, 0px) + 43px); z-index: 50;
   padding: 24px 40px;
-  overflow: hidden;
+  isolation: isolate;
+  /* 글래스 (Figma 61:3323) : 브랜드 그린(위 30% 까지 불투명)→그린 10% 그라디언트 + white 10% 틴트 위에 GNB 와 같은 굴절 렌즈(--lg-filter, glass.js) */
+  background:
+    linear-gradient(180deg, var(--colors-foreground-fgBrandPrimary) 30.13%, color-mix(in srgb, var(--colors-foreground-fgBrandPrimary) 10%, transparent) 118.24%),
+    var(--componentColors-alpha-alphaWhite10);
+  box-shadow: var(--shadow-3xl);
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.5);
+  backdrop-filter: blur(1.5px) var(--lg-filter, saturate(1.5));
   transition: opacity .35s var(--ease), transform .35s var(--ease), background-color .2s;
+}
+.cta--fixed:hover {
+  background:
+    linear-gradient(180deg, var(--colors-background-bgBrandSolidHover) 30.13%, color-mix(in srgb, var(--colors-background-bgBrandSolidHover) 10%, transparent) 118.24%),
+    var(--componentColors-alpha-alphaWhite20);
+}
+/* 굴절이 없는 브라우저(사파리 등, html.no-refract — glass.js)는 GNB 와 같은 프로스트 블러 폴백 */
+.no-refract .cta--fixed {
+  -webkit-backdrop-filter: blur(5px) saturate(1.5);
+  backdrop-filter: blur(5px) saturate(1.5);
 }
 /* 콘텐츠 안의 Early Access 버튼(히어로·푸터)이 화면에 보이는 동안은 숨김 */
 .cta--fixed.is-hidden { opacity: 0; transform: translateY(-10px); pointer-events: none; }
 /* 로드 시 깜빡임 방지: HTML 에서 is-hidden 으로 시작하고 JS 가 판단해 연다. JS 가 없으면 항상 표시 */
 .no-js .cta--fixed.is-hidden { opacity: 1; transform: none; pointer-events: auto; }
+/* 림 하이라이트 (--lg-rim, glass.js paintRim) — GNB 다크 글래스와 동일 */
 .cta--fixed::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background: linear-gradient(180deg, var(--componentColors-alpha-alphaWhite50) 0%, var(--colors-base-transparent) 100%);
-  mix-blend-mode: soft-light; pointer-events: none;
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1;
+  background: var(--lg-rim, none) center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 /* ---------- GNB ---------- */

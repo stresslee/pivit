@@ -165,7 +165,9 @@
 
   /* ---------- GNB 글래스 렌즈 (glisse) : spread 필드 · Bend 1.0 · Dispersion 1.05 · Rim 0.61 ---------- */
   const glass = window.PivitGlass ? PivitGlass.mountField(gnb, { bend: 1.0, dispersion: 1.05, rim: 0.61, blur: 0.6 }) : null;
-  window.addEventListener('load', () => glass && glass.refit());
+  // 우측 상단 고정 Early Access 버튼도 같은 렌즈 (Figma 61:3301 Glass)
+  const ctaGlass = window.PivitGlass && fixedCta ? PivitGlass.mountField(fixedCta, { bend: 1.0, dispersion: 1.05, rim: 0.61, blur: 0.6 }) : null;
+  window.addEventListener('load', () => { glass && glass.refit(); ctaGlass && ctaGlass.refit(); });
 
   /* ---------- GNB 꿀렁임 : 스크롤 속도에 따라 눌렸다가 탄성으로 복귀, 렌즈 굴절도 같이 출렁 ---------- */
   const wobble = { amount: 1 };
