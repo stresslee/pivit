@@ -320,7 +320,7 @@
         // 줄 마스크는 유지하고 글자 하나하나가 아주 짧은 간격(8ms)으로 올라온다
         onSplit: (self) => {
           gsap.set(el, { opacity: 1 });   // 히어로 CSS(.hero__content > * { opacity: 0 }) 해제 — 분할된 뒤에만 보이게 해 깜빡임 방지
-          if (inHero) { heroChars = self.chars; heroChars.forEach((c) => { c.dataset.ch = c.textContent; }); heroEmojiReset && heroEmojiReset(); }
+          if (inHero) { heroChars = self.chars; heroChars.forEach((c) => { c.dataset.ch = c.textContent; c.dataset.display = c.style.display; }); heroEmojiReset && heroEmojiReset(); }
           return gsap.from(self.chars, {
             yPercent: 100, opacity: 0, ease: 'expo.out',
             duration: inHero ? HERO_TITLE_DUR : 0.8, stagger: inHero ? HERO_TITLE_STAGGER : 0.008,
@@ -379,12 +379,12 @@
     return steps;
   };
 
-  /* ---------- 히어로 타이틀 이모지 (Figma 67:3386) : 히어로가 보이는 상태에서 마우스 동작이 5초 없으면 회사→🏢, 사람→👻, 시간→⏰, 보여→👀 를
+  /* ---------- 히어로 타이틀 이모지 (Figma 67:3386) : 히어로가 보이는 상태에서 마우스 동작이 5초 없으면 회사→🏢, 사람→🧑‍💻, 시간→⏰, 보여→👀 를
      랜덤 순서로 2초에 하나씩 바꿔 보여 준다. 넷 다 바뀐 뒤에는 다시 랜덤 순서로 2초에 하나씩 이모지가 사라지고 글자가 한 자씩 타이핑되듯 돌아온다. 이 사이클을 마우스가 움직일 때까지 반복.
      마우스가 움직이면 즉시 전부 원문으로. 마우스 환경에서만 ---------- */
   const heroTitle = document.querySelector('.hero__title');
   if (heroTitle && window.SplitText && hoverMq.matches) {
-    const WORDS = [['회사', '🏢'], ['사람', '👻'], ['시간', '⏰'], ['보여', '👀']];
+    const WORDS = [['회사', '🏢'], ['사람', '🧑‍💻'], ['시간', '⏰'], ['보여', '👀']];
     const IDLE_MS = 5000, STEP_MS = 2000, TYPE_MS = 120;
     let idleTimer = null, timers = [], swapped = [];
     const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
@@ -400,7 +400,7 @@
     };
     // 한 단어를 즉시 원문으로 (SplitText 가 글자에 준 inline-block 은 되살려야 한다 — 지우면 div 라 글자마다 줄바꿈)
     const putBack = (entry) => {
-      entry.els.forEach((c, i) => { gsap.killTweensOf(c); c.style.display = entry.display[i]; c.style.width = ''; c.style.textAlign = ''; c.style.opacity = ''; c.textContent = c.dataset.ch; gsap.set(c, { clearProps: 'transform,width,opacity' }); });
+      entry.els.forEach((c) => { gsap.killTweensOf(c); c.style.display = c.dataset.display || ''; c.style.width = ''; c.style.textAlign = ''; c.style.opacity = ''; c.textContent = c.dataset.ch; gsap.set(c, { clearProps: 'transform,width,opacity' }); });
     };
     const finish = (entry) => { putBack(entry); swapped = swapped.filter((e) => e !== entry); };
     // 마우스가 움직이면 : 진행 중이던 사이클은 멈추고, 남은 이모지를 앞 단어부터 순서대로 하나씩 타이핑해 원문으로 되돌린다 (타이핑 중이던 단어는 바로 완성)
@@ -418,11 +418,13 @@
     heroEmojiReset = () => { clearTimers(); swapped = []; };
     // 단어 → 이모지 (두 글자 폭에서 이모지 폭으로 줄며 팝)
     const toEmoji = (word, emoji) => {
+      if (swapped.some((e) => e.word === word)) return;                    // 이미 이모지 상태면 중복 치환 금지
       const els = findWord(word);
       if (!els) return;
+      els.forEach((c) => { c.style.display = c.dataset.display || ''; c.textContent = c.dataset.ch; });   // 항상 원문 상태에서 출발
       const width = els.reduce((sum, c) => sum + c.getBoundingClientRect().width, 0);
       const first = els[0];
-      const entry = { word, els, text: first.textContent, display: els.map((c) => c.style.display) };
+      const entry = { word, els, text: first.textContent };
       swapped.push(entry);
       els.slice(1).forEach((c) => { c.style.display = 'none'; });
       first.style.display = 'inline-block'; first.style.textAlign = 'center';
@@ -431,24 +433,28 @@
       gsap.fromTo(first, { width, scale: 0.4, rotation: -15 }, { width: natural, scale: 1, rotation: 0, duration: 0.55, ease: 'back.out(1.6)' });
     };
     // 이모지 → 단어 : 이모지가 작아져 사라진 뒤 한글 IME 로 치듯 자모 단위(TYPE_MS 간격)로 타이핑된다 (회사: ㅎ→호→회→횟→회사)
+    // 진행은 전부 setTimeout(later) 기준 — GSAP 콜백(rAF)에 기대면 백그라운드 탭에서 멈춘 채 다음 사이클과 겹쳐 상태가 꼬인다
     const toText = (entry) => {
+      if (entry.typing) return;
       const first = entry.els[0];
       const steps = typingSteps(entry.word);
       entry.typing = true;
       const render = (text) => {
         const chars = Array.from(text);
-        entry.els.forEach((c, i) => { if (i < chars.length) { c.style.display = entry.display[i]; c.textContent = chars[i]; } else c.style.display = 'none'; });
+        entry.els.forEach((c, i) => { if (i < chars.length) { c.style.display = c.dataset.display || ''; c.textContent = chars[i]; } else c.style.display = 'none'; });
       };
-      gsap.to(first, { scale: 0, duration: 0.18, ease: 'power2.in', onComplete: () => {
-        first.style.width = ''; first.style.textAlign = '';
+      gsap.to(first, { scale: 0, duration: 0.18, ease: 'power2.in' });
+      later(() => {
+        gsap.killTweensOf(first); first.style.width = ''; first.style.textAlign = '';
         gsap.set(first, { clearProps: 'transform,width' });
         steps.forEach((text, k) => later(() => render(text), TYPE_MS * k));
         later(() => { render(entry.word); swapped = swapped.filter((e) => e !== entry); }, TYPE_MS * steps.length);
-      } });
+      }, 180);
     };
-    // 사이클 : 이모지 넷을 2초 간격으로 → 2초 쉬고 → 랜덤 순서로 2초 간격 타이핑 복귀 → 2초 쉬고 → 반복
+    // 사이클 : 이모지 넷을 2초 간격으로 → 2초 쉬고 → 랜덤 순서로 2초 간격 타이핑 복귀 → 2초 쉬고 → 반복. 시작 전에 남은 상태가 있으면 전부 원문으로 정리
     const cycle = () => {
       if (!heroVisible()) return;
+      if (swapped.length) { swapped.forEach(putBack); swapped = []; }
       const order = gsap.utils.shuffle(WORDS.slice());
       order.forEach(([word, emoji], i) => later(() => heroVisible() && toEmoji(word, emoji), STEP_MS * i));
       const back = STEP_MS * order.length + STEP_MS;
@@ -456,6 +462,8 @@
       backOrder.forEach((word, i) => later(() => { const entry = swapped.find((e) => e.word === word); if (entry && heroVisible()) toText(entry); }, back + STEP_MS * i));
       later(cycle, back + STEP_MS * backOrder.length + STEP_MS);
     };
+    // 탭이 숨겨지면(백그라운드) 즉시 원문으로 돌리고 모든 예약을 비운다. 다시 보이면 5초 유휴부터 다시 센다
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { clearTimers(); swapped.forEach(putBack); swapped = []; restoring = false; clearTimeout(idleTimer); } else arm(); });
     const arm = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (heroVisible() && heroChars.length) cycle(); }, IDLE_MS); };
     const activity = () => { if (!restoring && (swapped.length || timers.length)) typeBackAll(); arm(); };
     ['mousemove', 'mousedown', 'wheel'].forEach((ev) => window.addEventListener(ev, activity, { passive: true }));
